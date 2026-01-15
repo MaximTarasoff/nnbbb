@@ -1,92 +1,100 @@
 package iteration1;
 
-import io.restassured.RestAssured;
-import io.restassured.filter.log.RequestLoggingFilter;
-import io.restassured.filter.log.ResponseLoggingFilter;
-import io.restassured.http.ContentType;
-import org.apache.http.HttpStatus;
+import generators.RandomData;
+import models.CreateUserRequest;
+import models.LoginRequest;
+import models.UserRole;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
-
-import static io.restassured.RestAssured.given;
+import requests.AdminCreateUserRequest;
+import requests.LoginRequester;
+import specs.RequestSpecs;
+import specs.ResponseSpecs;
 
 
 public class LoginUserTest {
 
-
-    /*
-    *
-    * ### Positive test: Get auth token
-### Admin Token: Authorization: Basic YWRtaW46YWRtaW4=
-POST http://localhost:4111/api/v1/auth/login
-Content-Type: application/json
-
-{
-  "username": "admin",
-  "password": "admin"
-}*/
-
-    @BeforeAll
-    public static void setupRestAssured() {
-        RestAssured.filters(
-                List.of(new RequestLoggingFilter(),
-                        new ResponseLoggingFilter()
-                ));
-    }
-
     @Test
     public void adminCanGenerateAuthTokenTest() {
-        given()
-                .contentType("application/json")
-                .accept(ContentType.JSON)
-                .body("""
-                        {
-                          "username": "admin",
-                          "password": "admin"
-                        }
-                        """)
-                .post("http://localhost:4111/api/v1/auth/login")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .header("Authorization", "Basic YWRtaW46YWRtaW4=");
+        LoginRequest loginRequest = LoginRequest.builder()
+                .username("admin")
+                .password("admin")
+                .build();
+        new LoginRequester(
+                RequestSpecs.unauthSpec(),
+                ResponseSpecs.requestReturnsOK())
+                .post(loginRequest);
+//
+//
+//        //У нас в данном случае жесткая связка: эндпойнт, JSON запроса, JSON ответа // обычно такие связки проектируются с помощью enum-ов или ДатаКлассов
+//        given()
+//                .spec(RequestSpecification) //Параметр 1: спецификация включает в себя (хэдеры)
+//                //Параметр 2: меняется тело запроса
+//                .body("""
+//                        {
+//                          "username": "admin",
+//                          "password": "admin"
+//                        }
+//                        """)
+//                // Параметр 3: эндпойнт
+//                .post("http://localhost:4111/api/v1/auth/login")
+//                .then()
+//                .assertThat()
+//                //Параметр 4: спецификация ответа (статус код, проверки и тд)
+//                .spec(ResponseSpecification);
     }
 
     @Test
     public void userCanGenerateAuthTokenTest() {
-        //создание пользователя
-        given()
-                .contentType("application/json")
-                .accept(ContentType.JSON)
-                .header("Authorization", "Basic YWRtaW46YWRtaW4=")
-                .body("""
-                        {
-                           "username": "kate19981223",
-                           "password": "Kate#1997fhdsfjhds",
-                           "role": "USER"
-                        }
-                        """)
-                .post("http://localhost:4111/api/v1/admin/users")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_CREATED);
 
-        given()
-                .contentType("application/json")
-                .accept(ContentType.JSON)
-                .body("""
-                        {
-                          "username": "kate1998122",
-                           "password": "Kate#1997fhdsfjhds"
-                        }
-                        """)
-                .post("http://localhost:4111/api/v1/auth/login")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK)
+        CreateUserRequest createUserRequest = CreateUserRequest.builder()
+                .username(RandomData.getUserName())
+                .password(RandomData.getPassword())
+                .role(UserRole.USER)
+                .build();
+
+        new AdminCreateUserRequest(RequestSpecs.adminSpec(), ResponseSpecs.entityWasCreated())
+                .post(createUserRequest);
+
+        LoginRequest loginRequest = LoginRequest.builder()
+                .username(createUserRequest.getUsername())
+                .password(createUserRequest.getPassword())
+                .build();
+
+        new LoginRequester(RequestSpecs.unauthSpec(),
+                ResponseSpecs.requestReturnsOK())
+                .post(loginRequest)
                 .header("Authorization", Matchers.notNullValue());
+        //создание пользователя
+//        given()
+//                .contentType("application/json")
+//                .accept(ContentType.JSON)
+//                .header("Authorization", "Basic YWRtaW46YWRtaW4=")
+//                .body("""
+//                        {
+//                           "username": "kate19981223",
+//                           "password": "Kate#1997fhdsfjhds",
+//                           "role": "USER"
+//                        }
+//                        """)
+//                .post("http://localhost:4111/api/v1/admin/users")
+//                .then()
+//                .assertThat()
+//                .statusCode(HttpStatus.SC_CREATED);
+//
+//        given()
+//                .contentType("application/json")
+//                .accept(ContentType.JSON)
+//                .body("""
+//                        {
+//                          "username": "kate1998122",
+//                           "password": "Kate#1997fhdsfjhds"
+//                        }
+//                        """)
+//                .post("http://localhost:4111/api/v1/auth/login")
+//                .then()
+//                .assertThat()
+//                .statusCode(HttpStatus.SC_OK)
+//                .header("Authorization", Matchers.notNullValue());
     }
 }

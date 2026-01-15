@@ -18,7 +18,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasItem;
 
-public class Practise {
+public class Practise extends BaseTest{
 
     @BeforeAll
     public static void setUpBeforeClass() {
