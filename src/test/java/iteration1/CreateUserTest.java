@@ -61,7 +61,7 @@ public class CreateUserTest {
         );
     }
 
-    //    @CsvSource({
+//    @CsvSource({
 //            //username field validation
 //            "q, Password33$, USER, ",
 //            "'  ', P@ssword3, USER, username, Username cannot be blank"
@@ -88,7 +88,6 @@ public class CreateUserTest {
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .body(errorKey, hasItem(errorValue));
 //                .body(errorKey, Matchers.equalTo(errorValue))
-        ;
     }
 
 }
