@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Data //@ToString , @EqualsAndHashCode, @Getter, @Setter, etc
@@ -13,8 +12,8 @@ import java.util.List;
 @NoArgsConstructor // конструктор без элементов
 @Builder //паттерн билдер
 public class CreateAccountResponse extends BaseModel {
-    private int id;
+    private long id;
     private String accountNumber;
-    private BigDecimal balance;
+    private double balance;
     private List<String> transactions;
 }

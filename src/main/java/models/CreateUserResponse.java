@@ -12,7 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class CreateUserResponse {
+public class CreateUserResponse extends BaseModel{
     private long id;
     private String username;
     private String password;
