@@ -2,17 +2,17 @@ package iteration1.ui;
 
 import com.codeborne.selenide.*;
 import api.models.CreateUserRequest;
+import common.annotations.Browsers;
 import org.junit.jupiter.api.Test;
 import api.requests.steps.AdminSteps;
 import ui.pages.AdminPanel;
 import ui.pages.LoginPage;
 import ui.pages.UserDashboard;
 
-import static com.codeborne.selenide.Selenide.$;
-
 public class LoginUserTest extends BaseUiTest {
 
     @Test
+    @Browsers({"chrome"})
     public void adminCanLoginWithCorrectDataTest() {
         var admin = CreateUserRequest.getAdmin();
         new LoginPage()

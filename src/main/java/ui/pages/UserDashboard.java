@@ -11,6 +11,7 @@ import static com.codeborne.selenide.Selenide.$;
 public class UserDashboard extends BasePage<UserDashboard> {
     private SelenideElement welcomeText = $(Selectors.byClassName("welcome-text"));
     private SelenideElement createNewAccount = $(Selectors.byText("➕ Create New Account"));
+
     @Override
     public String url() {
         return "/dashboard";
