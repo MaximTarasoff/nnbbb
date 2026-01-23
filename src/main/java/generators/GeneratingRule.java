@@ -8,5 +8,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 public @interface GeneratingRule {
-    String regex();
+    String regex() default "";
+    double min() default Double.NaN;
+    double max() default Double.NaN;
 }
