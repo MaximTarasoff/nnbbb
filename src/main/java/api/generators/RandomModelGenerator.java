@@ -1,6 +1,5 @@
 package api.generators;
 
-//погуглить эту библиотеку
 import com.github.curiousoddman.rgxgen.RgxGen;
 
 import java.lang.reflect.Field;
@@ -21,7 +20,7 @@ public class RandomModelGenerator {
                 Object value;
                 GeneratingRule rule = field.getAnnotation(GeneratingRule.class);
                 if (rule != null) {
-                    value = generateFromRegex(rule.regex(), field.getType());
+                    value = generateFromRule(rule, field.getType());
                 } else {
                     value = generateRandomValue(field);
                 }
@@ -30,6 +29,61 @@ public class RandomModelGenerator {
             return instance;
         } catch (Exception e) {
             throw new RuntimeException("Failed to generate entity", e);
+        }
+    }
+
+    public static <T> T generateAnnotatedFieldsOnly(Class<T> clazz) {
+        try {
+            T instance = clazz.getDeclaredConstructor().newInstance();
+            for (Field field : getAllFields(clazz)) {
+                field.setAccessible(true);
+                GeneratingRule rule = field.getAnnotation(GeneratingRule.class);
+                if (rule != null) {
+                    Object value = generateFromRule(rule, field.getType());
+                    field.set(instance, value);
+                }
+                // Поля без аннотации остаются со значениями по умолчанию/null
+            }
+            return instance;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate entity with annotated fields only", e);
+        }
+    }
+
+    // Заполнение конкретного поля переданного объекта
+    public static <T> T generateFieldValue(Class<T> clazz, String fieldName) {
+        try {
+            T instance = clazz.getDeclaredConstructor().newInstance();
+            Field field = findField(clazz, fieldName);
+            if (field == null) {
+                throw new IllegalArgumentException("Field '" + fieldName + "' not found in class " + clazz);
+            }
+
+            field.setAccessible(true);
+            Object value = generateValueForField(field);
+            field.set(instance, value);
+            return instance;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to populate field '" + fieldName + "'", e);
+        }
+    }
+
+    private static Field findField(Class<?> clazz, String fieldName) {
+        for (Field field : getAllFields(clazz)) {
+            if (field.getName().equals(fieldName)) {
+                return field;
+            }
+        }
+        return null;
+    }
+
+    private static Object generateValueForField(Field field) {
+        GeneratingRule rule = field.getAnnotation(GeneratingRule.class);
+        if (rule != null) {
+            return generateFromRule(rule, field.getType());
+        } else {
+            return generateRandomValue(field);
         }
     }
 
@@ -64,6 +118,15 @@ public class RandomModelGenerator {
         }
     }
 
+    private static Object generateFromRule(GeneratingRule rule, Class<?> type) {
+        // Если задан regex — генерируем по нему
+        if (!rule.regex().isEmpty()) {
+            return generateFromRegex(rule.regex(), type);
+        }
+        // Иначе используем min/max
+        return generateFromMinMax(rule, type);
+    }
+
     private static Object generateFromRegex(String regex, Class<?> type) {
         RgxGen rgxGen = new RgxGen(regex);
         String result = rgxGen.generate();
@@ -73,6 +136,21 @@ public class RandomModelGenerator {
             return Long.parseLong(result);
         } else {
             return result;
+        }
+    }
+
+    private static Object generateFromMinMax(GeneratingRule rule, Class<?> type) {
+        double min = Double.isNaN(rule.min()) ? 0 : rule.min();
+        double max = Double.isNaN(rule.max()) ? 100 : rule.max();
+
+        if (type.equals(Integer.class) || type.equals(int.class)) {
+            return (int) (min + random.nextDouble() * (max - min + 1));
+        } else if (type.equals(Long.class) || type.equals(long.class)) {
+            return (long) (min + random.nextDouble() * (max - min + 1));
+        } else if (type.equals(Double.class) || type.equals(double.class)) {
+            return min + random.nextDouble() * (max - min);
+        } else {
+            throw new IllegalArgumentException("Min/max rules only supported for numeric types");
         }
     }
 

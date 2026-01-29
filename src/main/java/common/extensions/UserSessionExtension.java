@@ -10,9 +10,10 @@ import ui.pages.BasePage;
 
 import java.util.LinkedList;
 import java.util.List;
+
 public class UserSessionExtension implements BeforeEachCallback {
     @Override
-    public void beforeEach(ExtensionContext extensionContext) throws Exception {
+    public void beforeEach(ExtensionContext extensionContext) {
         // Шаг 1: проверка, что у теста есть аннотация UserSession
         UserSession annotation = extensionContext.getRequiredTestMethod().getAnnotation(UserSession.class);
         if (annotation != null) {
@@ -31,7 +32,9 @@ public class UserSessionExtension implements BeforeEachCallback {
 
             int authAsUser = annotation.auth();
 
-            BasePage.authAsUser(SessionStorage.getUser(authAsUser));
+            if ("UI".equals(annotation.type())) {
+                BasePage.authAsUser(SessionStorage.getUser(authAsUser));
+            }
         }
     }
 }

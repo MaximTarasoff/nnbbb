@@ -1,0 +1,16 @@
+package api.models.accounts.transfer;
+
+import lombok.*;
+import api.models.BaseModel;
+
+@EqualsAndHashCode(callSuper = true)
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class TransferMoneyResponse extends BaseModel {
+    private long senderAccountId;
+    private long receiverAccountId;
+    private double amount;
+    private String message;
+}

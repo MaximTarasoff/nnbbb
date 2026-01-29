@@ -1,8 +1,8 @@
-package api.models;
-
+package api.models.customer;
 
 import api.models.accounts.AccountResponse;
 import lombok.*;
+import api.models.BaseModel;
 
 import java.util.List;
 
@@ -11,8 +11,8 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class CreateUserResponse extends BaseModel{
-    private long id;
+public class CustomerModel extends BaseModel {
+    private String id;
     private String username;
     private String password;
     private String name;

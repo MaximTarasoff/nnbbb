@@ -1,5 +1,6 @@
 package iteration1.api;
 
+import api.models.accounts.CreateAccountResponse;
 import api.models.CreateUserRequest;
 import org.junit.jupiter.api.Test;
 import api.requests.skelethon.Endpoint;
@@ -7,6 +8,8 @@ import api.requests.skelethon.requesters.CrudRequester;
 import api.requests.steps.AdminSteps;
 import api.specs.RequestSpecs;
 import api.specs.ResponseSpecs;
+import api.requests.skelethon.requesters.ValidatedCrudRequester;
+
 
 public class CreateAccountTest extends BaseTest {
 
@@ -14,10 +17,25 @@ public class CreateAccountTest extends BaseTest {
     public void userCanCreateAccountTest() {
         CreateUserRequest userRequest = AdminSteps.createUser();
 
-        new CrudRequester(
+        CreateAccountResponse createAccountResponse = new ValidatedCrudRequester<CreateAccountResponse>(
                 RequestSpecs.authAsUser(userRequest.getUsername(), userRequest.getPassword()),
                 Endpoint.ACCOUNTS,
                 ResponseSpecs.entityWasCreated())
                 .post(null);
+
+        new CrudRequester(
+                RequestSpecs.authAsUser(userRequest.getUsername(), userRequest.getPassword()),
+                Endpoint.CUSTOMER_ACCOUNTS,
+                ResponseSpecs.requestReturnsOK()
+        ).get();
+
+        new CrudRequester(
+                RequestSpecs.authAsUser(
+                        userRequest.getUsername(),
+                        userRequest.getPassword()
+                ),
+                Endpoint.ACCOUNTS_TRANSACTIONS,
+                ResponseSpecs.requestReturnsOK()
+        ).get(createAccountResponse.getId());
     }
 }

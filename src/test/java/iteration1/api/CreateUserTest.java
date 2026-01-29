@@ -30,7 +30,7 @@ public class CreateUserTest extends BaseTest {
                 ResponseSpecs.entityWasCreated())
                 .post(createdUserRequest);
 
-        ModelAssertions.assertThatModels(createdUserRequest, createUserResponse);
+        ModelAssertions.assertThatModels(createdUserRequest, createUserResponse).match();
     }
 
     public static Stream<Arguments> userInvalidData() {

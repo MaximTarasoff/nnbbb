@@ -20,13 +20,27 @@ public class ValidatedCrudRequester<T extends BaseModel> extends HttpRequest imp
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public T post(BaseModel model) {
         return (T) crudRequester.post(model).extract().as(endpoint.getResponseModel());
     }
 
     @Override
-    public Object get(long id) {
-        return null;
+    @SuppressWarnings("unchecked")
+    public T get() {
+        return (T) crudRequester.get().extract().as(endpoint.getResponseModel());
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public T get(long id) {
+        return (T) crudRequester.get(id).extract().as(endpoint.getResponseModel());
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public T update(BaseModel model) {
+        return (T) crudRequester.update(model).extract().as(endpoint.getResponseModel());
     }
 
     @Override
@@ -42,6 +56,12 @@ public class ValidatedCrudRequester<T extends BaseModel> extends HttpRequest imp
     @Override
     public List<T> getAll(Class<?> clazz) {
         T[] array = (T[]) crudRequester.getAll(clazz).extract().as(clazz);
+        return Arrays.asList(array);
+    }
+
+    @Override
+    public List<T>  getAll(Class<?> clazz, long id) {
+        T[] array = (T[]) crudRequester.getAll(clazz, id).extract().as(clazz);
         return Arrays.asList(array);
     }
 }

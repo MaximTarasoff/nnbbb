@@ -16,13 +16,14 @@ public class ModelComparisonConfigLoader {
             Properties props = new Properties();
             props.load(input);
             for (String key : props.stringPropertyNames()) {
-                String[] target = props.getProperty(key).split(":");
+                String value = props.getProperty(key).trim();
+                String[] target = value.split(":", 2); // Split into max 2 parts
                 if (target.length != 2) continue;
 
                 String responseClassName = target[0].trim();
-                List<String> fields = Arrays.asList(target[1].split(","));
+                String[] fieldPairs = target[1].split(",");
 
-                rules.put(key.trim(), new ComparisonRule(responseClassName, fields));
+                rules.put(key.trim(), new ComparisonRule(responseClassName, Arrays.asList(fieldPairs)));
             }
         } catch (IOException e) {
             throw new RuntimeException("Failed to load DTO comparison config", e);
