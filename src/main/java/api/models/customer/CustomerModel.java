@@ -1,4 +1,4 @@
-package models.customer;
+package api.models.customer;
 
 import lombok.*;
 import models.BaseModel;

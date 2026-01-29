@@ -1,16 +1,17 @@
-package models.accounts;
+package api.models.accounts.deposit;
 
 import lombok.*;
 import models.BaseModel;
+import api.models.accounts.Transaction;
 
 import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
-@Builder
-@NoArgsConstructor
 @AllArgsConstructor
-public class CreateAccountResponse extends BaseModel {
+@NoArgsConstructor
+@Builder
+public class DepositMoneyResponse extends BaseModel {
     private long id;
     private String accountNumber;
     private double balance;

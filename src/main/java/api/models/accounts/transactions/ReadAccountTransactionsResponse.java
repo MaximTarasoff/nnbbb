@@ -1,9 +1,9 @@
-package models.accounts.transactions;
+package api.models.accounts.transactions;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.*;
 import models.BaseModel;
-import models.accounts.Transaction;
+import api.models.accounts.Transaction;
 
 import java.util.List;
 

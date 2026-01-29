@@ -1,4 +1,4 @@
-package models.customer.profile;
+package api.models.customer.profile;
 
 import generators.GeneratingRule;
 import lombok.*;

@@ -1,4 +1,4 @@
-package models.accounts.deposit;
+package api.models.accounts.deposit;
 
 import generators.GeneratingRule;
 import lombok.*;

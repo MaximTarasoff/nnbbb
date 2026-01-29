@@ -2,12 +2,12 @@ package iteration2;
 
 import iteration1.BaseTest;
 import models.CreateUserRequest;
-import models.accounts.CreateAccountResponse;
-import models.accounts.Transaction;
-import models.accounts.deposit.DepositMoneyResponse;
-import models.accounts.transactions.ReadAccountTransactionsResponse;
-import models.accounts.transfer.TransferMoneyRequest;
-import models.accounts.transfer.TransferMoneyResponse;
+import api.models.accounts.CreateAccountResponse;
+import api.models.accounts.Transaction;
+import api.models.accounts.deposit.DepositMoneyResponse;
+import api.models.accounts.transactions.ReadAccountTransactionsResponse;
+import api.models.accounts.transfer.TransferMoneyRequest;
+import api.models.accounts.transfer.TransferMoneyResponse;
 import models.comparison.ModelAssertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

@@ -1,8 +1,8 @@
-package models.customer.profile;
+package api.models.customer.profile;
 
 import lombok.*;
 import models.BaseModel;
-import models.customer.CustomerModel;
+import api.models.customer.CustomerModel;
 
 @EqualsAndHashCode(callSuper = true)
 @Data

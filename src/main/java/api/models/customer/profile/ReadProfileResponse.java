@@ -1,8 +1,8 @@
-package models.customer.profile;
+package api.models.customer.profile;
 
 import lombok.*;
 import models.BaseModel;
-import models.accounts.CreateAccountResponse;
+import api.models.accounts.CreateAccountResponse;
 
 import java.util.List;
 

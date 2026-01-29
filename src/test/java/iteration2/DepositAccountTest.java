@@ -2,12 +2,12 @@ package iteration2;
 
 import generators.RandomModelGenerator;
 import iteration1.BaseTest;
-import models.accounts.CreateAccountResponse;
+import api.models.accounts.CreateAccountResponse;
 import models.CreateUserRequest;
-import models.accounts.Transaction;
-import models.accounts.deposit.DepositMoneyRequest;
-import models.accounts.deposit.DepositMoneyResponse;
-import models.accounts.transactions.ReadAccountTransactionsResponse;
+import api.models.accounts.Transaction;
+import api.models.accounts.deposit.DepositMoneyRequest;
+import api.models.accounts.deposit.DepositMoneyResponse;
+import api.models.accounts.transactions.ReadAccountTransactionsResponse;
 import models.comparison.ModelAssertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

@@ -1,5 +1,6 @@
-package models.accounts.transfer;
+package api.models.accounts.transfer;
 
+import generators.GeneratingRule;
 import lombok.*;
 import models.BaseModel;
 
@@ -8,9 +9,9 @@ import models.BaseModel;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class TransferMoneyResponse extends BaseModel {
+public class TransferMoneyRequest extends BaseModel {
     private long senderAccountId;
     private long receiverAccountId;
+    @GeneratingRule(min = 0.01, max = 10000.0)
     private double amount;
-    private String message;
 }
