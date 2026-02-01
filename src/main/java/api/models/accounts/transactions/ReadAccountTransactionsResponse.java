@@ -2,8 +2,7 @@ package api.models.accounts.transactions;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.*;
-import models.BaseModel;
-import api.models.accounts.Transaction;
+import api.models.BaseModel;
 
 import java.util.List;
 

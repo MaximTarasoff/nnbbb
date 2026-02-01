@@ -1,7 +1,8 @@
 package api.models.customer;
 
+import api.models.accounts.AccountResponse;
 import lombok.*;
-import models.BaseModel;
+import api.models.BaseModel;
 
 import java.util.List;
 
@@ -16,5 +17,5 @@ public class CustomerModel extends BaseModel {
     private String password;
     private String name;
     private String role;
-    private List<String> accounts;
+    private List<AccountResponse> accounts;
 }

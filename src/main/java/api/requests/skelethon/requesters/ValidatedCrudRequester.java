@@ -54,8 +54,15 @@ public class ValidatedCrudRequester<T extends BaseModel> extends HttpRequest imp
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public List<T> getAll(Class<?> clazz) {
         T[] array = (T[]) crudRequester.getAll(clazz).extract().as(clazz);
+        return Arrays.asList(array);
+    }
+
+    @Override
+    public List<T>  getAll(Class<?> clazz, long id) {
+        T[] array = (T[]) crudRequester.getAll(clazz, id).extract().as(clazz);
         return Arrays.asList(array);
     }
 }

@@ -1,10 +1,10 @@
 package iteration1.ui;
 
-import api.models.CreateAccountResponse;
+import api.models.accounts.CreateAccountResponse;
 import common.annotations.UserSession;
 import common.storage.SessionStorage;
 import org.junit.jupiter.api.Test;
-import ui.pages.BankAlert;
+import ui.pages.enums.BankAlert;
 import ui.pages.UserDashboard;
 
 import java.util.List;
@@ -17,7 +17,7 @@ public class CreateAccountTest extends BaseUiTest {
     public void userCanCreateAccountTest() {
         new UserDashboard().open().createNewAccount();
 
-        List<CreateAccountResponse> createdAccounts = SessionStorage.getSteps().getAllAccounts();
+        List<CreateAccountResponse> createdAccounts = SessionStorage.getUserSteps().getAllAccounts();
 
         assertThat(createdAccounts).hasSize(1);
 

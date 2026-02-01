@@ -1,10 +1,8 @@
 package ui.elements;
 
-import com.codeborne.selenide.ElementsCollection;
 import com.codeborne.selenide.SelenideElement;
 import lombok.Getter;
 
-import java.util.List;
 
 @Getter
 public class UserBage extends BaseElement {
