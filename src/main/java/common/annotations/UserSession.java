@@ -8,6 +8,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface UserSession {
+    String type() default "UI";
     int value() default 1;
     int auth() default 1;
 }

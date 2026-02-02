@@ -1,7 +1,7 @@
 package api.models.accounts.transfer;
 
 import lombok.*;
-import models.BaseModel;
+import api.models.BaseModel;
 
 @EqualsAndHashCode(callSuper = true)
 @Data

@@ -1,7 +1,7 @@
 package api.models.customer.profile;
 
 import lombok.*;
-import models.BaseModel;
+import api.models.BaseModel;
 import api.models.customer.CustomerModel;
 
 @EqualsAndHashCode(callSuper = true)

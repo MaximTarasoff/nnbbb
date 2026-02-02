@@ -1,51 +1,42 @@
-package iteration2;
+package iteration2.api;
 
-import generators.RandomModelGenerator;
-import models.CreateUserRequest;
-import models.comparison.ModelAssertions;
+import api.generators.RandomModelGenerator;
+import api.models.comparison.ModelAssertions;
 import api.models.customer.profile.ReadProfileResponse;
 import api.models.customer.profile.UpdateProfileRequest;
 import api.models.customer.profile.UpdateProfileResponse;
-import org.junit.jupiter.api.BeforeAll;
+import common.annotations.UserSession;
+import common.storage.SessionStorage;
+import iteration1.api.BaseTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import requests.skelethon.Endpoint;
-import requests.skelethon.requesters.CrudRequester;
-import requests.skelethon.requesters.ValidatedCrudRequester;
-import requests.steps.AdminSteps;
-import requests.steps.ProfileSteps;
-import specs.RequestSpecs;
-import specs.ResponseSpecs;
+import api.requests.skelethon.Endpoint;
+import api.requests.skelethon.requesters.CrudRequester;
+import api.requests.skelethon.requesters.ValidatedCrudRequester;
+import api.specs.RequestSpecs;
+import api.specs.ResponseSpecs;
 
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-public class UpdateProfileTest {
-    private static CreateUserRequest createUserRequest;
-
-    @BeforeAll
-    public static void setup() {
-        createUserRequest = AdminSteps.createUser();
-    }
-
+public class UpdateProfileTest extends BaseTest {
     @Test
+    @UserSession(type = "API")
     public void AuthUserCanUpdateProfileNameTest() {
         UpdateProfileRequest updateProfileRequest = RandomModelGenerator.generate(UpdateProfileRequest.class);
 
         UpdateProfileResponse createUserResponse = new ValidatedCrudRequester<UpdateProfileResponse>(
-                RequestSpecs.authAsUser(createUserRequest.getUsername(), createUserRequest.getPassword()),
+                RequestSpecs.authAsUser(SessionStorage.getUser().getUsername(), SessionStorage.getUser().getPassword()),
                 Endpoint.CUSTOMER_PROFILE,
                 ResponseSpecs.requestReturnsOK("message", "Profile updated successfully"))
                 .update(updateProfileRequest);
 
         ModelAssertions.assertThatModels(updateProfileRequest, createUserResponse).match();
 
-        ReadProfileResponse readCustomerResponse = ProfileSteps.getProfileInfo(
-                createUserRequest.getUsername(),
-                createUserRequest.getPassword());
+        ReadProfileResponse readCustomerResponse = SessionStorage.getProfileSteps().getProfileInfo();
 
         assertThat(readCustomerResponse.getName()).isEqualTo(updateProfileRequest.getName());
         ModelAssertions.assertThatModels(readCustomerResponse, createUserResponse).match();
@@ -60,6 +51,7 @@ public class UpdateProfileTest {
 
     @MethodSource("nameInvalidData")
     @ParameterizedTest
+    @UserSession(type = "API")
     public void AuthUserCannotUpdateProfileWithInvalidNameTest(String name, String errorValue) {
         UpdateProfileRequest updateProfileRequest =
                 UpdateProfileRequest.builder()
@@ -67,14 +59,12 @@ public class UpdateProfileTest {
                         .build();
 
         new CrudRequester(
-                RequestSpecs.authAsUser(createUserRequest.getUsername(), createUserRequest.getPassword()),
+                RequestSpecs.authAsUser(SessionStorage.getUser().getUsername(), SessionStorage.getUser().getPassword()),
                 Endpoint.CUSTOMER_PROFILE,
                 ResponseSpecs.requestReturnsBadRequest(errorValue))
                 .update(updateProfileRequest);
 
-        ReadProfileResponse readProfileResponse = ProfileSteps.getProfileInfo(
-                createUserRequest.getUsername(),
-                createUserRequest.getPassword());
+        ReadProfileResponse readProfileResponse = SessionStorage.getProfileSteps().getProfileInfo();
         assertThat(readProfileResponse.getName()).isNotEqualTo(name);
     }
 }

@@ -1,26 +1,26 @@
-package iteration2;
+package iteration2.api;
 
-import iteration1.BaseTest;
-import models.CreateUserRequest;
 import api.models.accounts.CreateAccountResponse;
-import api.models.accounts.Transaction;
+import api.models.accounts.transactions.TransactionType;
+import common.annotations.UserSession;
+import common.storage.SessionStorage;
+import iteration1.api.BaseTest;
+import api.models.accounts.transactions.Transaction;
 import api.models.accounts.deposit.DepositMoneyResponse;
 import api.models.accounts.transactions.ReadAccountTransactionsResponse;
 import api.models.accounts.transfer.TransferMoneyRequest;
 import api.models.accounts.transfer.TransferMoneyResponse;
-import models.comparison.ModelAssertions;
-import org.junit.jupiter.api.BeforeAll;
+import api.models.comparison.ModelAssertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import requests.skelethon.Endpoint;
-import requests.skelethon.requesters.CrudRequester;
-import requests.skelethon.requesters.ValidatedCrudRequester;
-import requests.steps.AdminSteps;
-import requests.steps.UserSteps;
-import specs.RequestSpecs;
-import specs.ResponseSpecs;
+import api.requests.skelethon.Endpoint;
+import api.requests.skelethon.requesters.CrudRequester;
+import api.requests.skelethon.requesters.ValidatedCrudRequester;
+import api.specs.RequestSpecs;
+import api.specs.ResponseSpecs;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -28,27 +28,20 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 public class TransferAccountTest extends BaseTest {
-    private static CreateUserRequest createUserRequestOwn;
-    private static CreateUserRequest createUserRequestOther;
     private static  CreateAccountResponse ownAccountOne;
     private static CreateAccountResponse ownAccountTwo;
     private static CreateAccountResponse otherAccountOne;
 
-    @BeforeAll
-    public static void setUpBeforeClass() {
-        createUserRequestOwn = AdminSteps.createUser();
-        ownAccountOne = UserSteps.createAccount(createUserRequestOwn.getUsername(), createUserRequestOwn.getPassword());
-        ownAccountTwo = UserSteps.createAccount(createUserRequestOwn.getUsername(), createUserRequestOwn.getPassword());
-
-        createUserRequestOther = AdminSteps.createUser();
-        otherAccountOne = UserSteps.createAccount(createUserRequestOther.getUsername(), createUserRequestOther.getPassword());
+    @BeforeEach
+    public void setUpBeforeClass() {
+        ownAccountOne = SessionStorage.getUserSteps(1).createAccount();
+        ownAccountTwo = SessionStorage.getUserSteps(1).createAccount();
     }
 
     @Test
+    @UserSession(type = "API")
     public void AuthUserCanTransferMoneyBetweenHisOwnAccountsTest() {
-        DepositMoneyResponse depositMoneyResponse = UserSteps.depositAccount(
-                createUserRequestOwn.getUsername(),
-                createUserRequestOwn.getPassword(),
+        DepositMoneyResponse depositMoneyResponse = SessionStorage.getUserSteps().depositAccountById(
                 ownAccountOne.getId()
         );
 
@@ -59,7 +52,7 @@ public class TransferAccountTest extends BaseTest {
                 .build();
 
         TransferMoneyResponse transferMoneyResponse = new ValidatedCrudRequester<TransferMoneyResponse>(
-                RequestSpecs.authAsUser(createUserRequestOwn.getUsername(), createUserRequestOwn.getPassword()),
+                RequestSpecs.authAsUser(SessionStorage.getUser().getUsername(), SessionStorage.getUser().getPassword()),
                 Endpoint.ACCOUNTS_TRANSFER,
                 ResponseSpecs.requestReturnsOK())
                 .post(transferMoneyRequest);
@@ -67,38 +60,44 @@ public class TransferAccountTest extends BaseTest {
         ModelAssertions.assertThatModels(transferMoneyRequest, transferMoneyResponse).match();
 
         ReadAccountTransactionsResponse transactionsResponse = new ValidatedCrudRequester<ReadAccountTransactionsResponse>(
-                RequestSpecs.authAsUser(createUserRequestOwn.getUsername(), createUserRequestOwn.getPassword()),
+                RequestSpecs.authAsUser(SessionStorage.getUser().getUsername(), SessionStorage.getUser().getPassword()),
                 Endpoint.ACCOUNTS_TRANSACTIONS,
                 ResponseSpecs.requestReturnsOK()
         ).get(ownAccountTwo.getId());
 
         ModelAssertions.assertThatModels(transactionsResponse, transferMoneyRequest).match();
 
-        List<Transaction> transactionsAccountOne = UserSteps.getAllAccountTransactions(createUserRequestOwn.getUsername(),
-                        createUserRequestOwn.getPassword(), ownAccountOne.getId())
-                .stream().filter(transaction -> transaction.getType().contains("TRANSFER_OUT") &&
-                        transaction.getAmount() == depositMoneyResponse.getBalance() &&
-                        transaction.getRelatedAccountId() == ownAccountTwo.getId())
-                .toList();
+        Transaction expectedTransactionOne = Transaction.builder()
+                .amount(depositMoneyResponse.getBalance())
+                .type(TransactionType.TRANSFER_OUT)
+                .relatedAccountId(ownAccountTwo.getId())
+                .build();
+
+        List<Transaction> transactionsAccountOne = SessionStorage.getUserSteps()
+                .getAccountTransactionsByParams(ownAccountOne.getId(), expectedTransactionOne);
 
         assertThat(transactionsAccountOne.size()).isEqualTo(1);
 
-        List<Transaction> transactionsAccountTwo = UserSteps.getAllAccountTransactions(createUserRequestOwn.getUsername(),
-                        createUserRequestOwn.getPassword(), ownAccountTwo.getId())
-                .stream().filter(transaction -> transaction.getType().contains("TRANSFER_IN") &&
-                        transaction.getAmount() == depositMoneyResponse.getBalance() &&
-                        transaction.getRelatedAccountId() == ownAccountOne.getId())
-                .toList();
+        Transaction expectedTransactionTwo = Transaction.builder()
+                .amount(depositMoneyResponse.getBalance())
+                .type(TransactionType.TRANSFER_IN)
+                .relatedAccountId(ownAccountOne.getId())
+                .build();
+
+        List<Transaction> transactionsAccountTwo = SessionStorage.getUserSteps()
+                .getAccountTransactionsByParams(
+                        ownAccountTwo.getId(), expectedTransactionTwo);
 
         assertThat(transactionsAccountTwo.size()).isEqualTo(1);
 
     }
 
     @Test
+    @UserSession(type = "API", value = 2)
     public void AuthUserCanTransferMoneyToNotHisAccountTest() {
-        DepositMoneyResponse depositMoneyResponse = UserSteps.depositAccount(
-                createUserRequestOwn.getUsername(),
-                createUserRequestOwn.getPassword(),
+        otherAccountOne = SessionStorage.getUserSteps(2).createAccount();
+
+        DepositMoneyResponse depositMoneyResponse = SessionStorage.getUserSteps().depositAccountById(
                 ownAccountOne.getId()
         );
 
@@ -110,7 +109,7 @@ public class TransferAccountTest extends BaseTest {
                         .build();
 
         TransferMoneyResponse transferMoneyResponse = new ValidatedCrudRequester<TransferMoneyResponse>(
-                RequestSpecs.authAsUser(createUserRequestOwn.getUsername(), createUserRequestOwn.getPassword()),
+                RequestSpecs.authAsUser(SessionStorage.getUser().getUsername(), SessionStorage.getUser().getPassword()),
                 Endpoint.ACCOUNTS_TRANSFER,
                 ResponseSpecs.requestReturnsOK())
                 .post(transferMoneyRequest);
@@ -118,28 +117,30 @@ public class TransferAccountTest extends BaseTest {
         ModelAssertions.assertThatModels(transferMoneyRequest, transferMoneyResponse).match();
 
         ReadAccountTransactionsResponse transactionsResponse = new ValidatedCrudRequester<ReadAccountTransactionsResponse>(
-                RequestSpecs.authAsUser(createUserRequestOther.getUsername(), createUserRequestOther.getPassword()),
+                RequestSpecs.authAsUser(SessionStorage.getUser(2).getUsername(), SessionStorage.getUser(2).getPassword()),
                 Endpoint.ACCOUNTS_TRANSACTIONS,
                 ResponseSpecs.requestReturnsOK()
         ).get(otherAccountOne.getId());
 
         ModelAssertions.assertThatModels(transactionsResponse, transferMoneyRequest).match();
 
-        List<Transaction> transactionsAccountOne = UserSteps.getAllAccountTransactions(createUserRequestOwn.getUsername(),
-                        createUserRequestOwn.getPassword(), ownAccountOne.getId())
-                .stream().filter(transaction -> transaction.getType().contains("TRANSFER_OUT") &&
-                        transaction.getAmount() == depositMoneyResponse.getBalance() &&
-                        transaction.getRelatedAccountId() == otherAccountOne.getId())
-                .toList();
+        Transaction expectedTransaction = Transaction.builder()
+                .amount(depositMoneyResponse.getBalance())
+                .type(TransactionType.TRANSFER_OUT)
+                .relatedAccountId(otherAccountOne.getId())
+                .build();
+
+        List<Transaction> transactionsAccountOne = SessionStorage.getUserSteps(1)
+                .getAccountTransactionsByParams(
+                        ownAccountOne.getId(),expectedTransaction);
 
         assertThat(transactionsAccountOne.size()).isEqualTo(1);
     }
 
     @Test
+    @UserSession(type = "API")
     public void AuthUserCannotTransferMoneyMoreThenExistTest() {
-        DepositMoneyResponse depositMoneyResponse = UserSteps.depositAccount(
-                createUserRequestOwn.getUsername(),
-                createUserRequestOwn.getPassword(),
+        DepositMoneyResponse depositMoneyResponse = SessionStorage.getUserSteps().depositAccountById(
                 ownAccountOne.getId()
         );
 
@@ -151,17 +152,20 @@ public class TransferAccountTest extends BaseTest {
                         .build();
 
         new CrudRequester(
-                RequestSpecs.authAsUser(createUserRequestOwn.getUsername(), createUserRequestOwn.getPassword()),
+                RequestSpecs.authAsUser(SessionStorage.getUser().getUsername(), SessionStorage.getUser().getPassword()),
                 Endpoint.ACCOUNTS_TRANSFER,
                 ResponseSpecs.requestReturnsBadRequest("Invalid transfer: insufficient funds or invalid accounts"))
                 .post(transferMoneyRequest);
 
-        List<Transaction> transactionsAccountOne = UserSteps.getAllAccountTransactions(createUserRequestOwn.getUsername(),
-                createUserRequestOwn.getPassword(), ownAccountOne.getId())
-                .stream().filter(transaction -> transaction.getType().contains("TRANSFER") &&
-                        transaction.getAmount() == depositMoneyResponse.getBalance() &&
-                        transaction.getRelatedAccountId() == ownAccountTwo.getId())
-                .toList();
+        Transaction expectedTransactionOne = Transaction.builder()
+                .amount(depositMoneyResponse.getBalance())
+                .type(TransactionType.TRANSFER_OUT)
+                .relatedAccountId(ownAccountTwo.getId())
+                .build();
+
+        List<Transaction> transactionsAccountOne = SessionStorage.getUserSteps()
+                .getAccountTransactionsByParams(
+                        ownAccountOne.getId(), expectedTransactionOne);
 
         assertThat(transactionsAccountOne.size()).isZero();
     }
@@ -176,6 +180,7 @@ public class TransferAccountTest extends BaseTest {
 
     @MethodSource("transferInvalidData")
     @ParameterizedTest
+    @UserSession(type = "API")
     public void userCanDepositInvalidMoneyToHisOwnAccountTest(double amount, String errorValue) {
         TransferMoneyRequest transferMoneyRequest =
                 TransferMoneyRequest.builder()
@@ -185,17 +190,20 @@ public class TransferAccountTest extends BaseTest {
                         .build();
 
         new CrudRequester(
-                RequestSpecs.authAsUser(createUserRequestOwn.getUsername(), createUserRequestOwn.getPassword()),
+                RequestSpecs.authAsUser(SessionStorage.getUser().getUsername(), SessionStorage.getUser().getPassword()),
                 Endpoint.ACCOUNTS_TRANSFER,
                 ResponseSpecs.requestReturnsBadRequest(errorValue))
                 .post(transferMoneyRequest);
 
-        List<Transaction> transactionsAccountOne = UserSteps.getAllAccountTransactions(createUserRequestOwn.getUsername(),
-                        createUserRequestOwn.getPassword(), ownAccountOne.getId())
-                .stream().filter(transaction -> transaction.getType().contains("TRANSFER") &&
-                        transaction.getAmount() == amount &&
-                        transaction.getRelatedAccountId() == ownAccountTwo.getId())
-                .toList();
+        Transaction expectedTransaction = Transaction.builder()
+                .amount(amount)
+                .type(TransactionType.TRANSFER)
+                .relatedAccountId(ownAccountTwo.getId())
+                .build();
+
+        List<Transaction> transactionsAccountOne = SessionStorage.getUserSteps()
+                .getAccountTransactionsByParams(ownAccountOne.getId(), expectedTransaction);
+
 
         assertThat(transactionsAccountOne.size()).isZero();
     }

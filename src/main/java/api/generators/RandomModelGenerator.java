@@ -1,5 +1,6 @@
 package api.generators;
 
+//погуглить эту библиотеку
 import com.github.curiousoddman.rgxgen.RgxGen;
 
 import java.lang.reflect.Field;
@@ -51,21 +52,24 @@ public class RandomModelGenerator {
     }
 
     // Заполнение конкретного поля переданного объекта
-    public static <T> void generateFieldValue(T object, String fieldName) {
+    public static <T> T generateFieldValue(Class<T> clazz, String fieldName) {
         try {
-            Field field = findField(object.getClass(), fieldName);
+            T instance = clazz.getDeclaredConstructor().newInstance();
+            Field field = findField(clazz, fieldName);
             if (field == null) {
-                throw new IllegalArgumentException("Field '" + fieldName + "' not found in class " + object.getClass());
+                throw new IllegalArgumentException("Field '" + fieldName + "' not found in class " + clazz);
             }
 
             field.setAccessible(true);
             Object value = generateValueForField(field);
-            field.set(object, value);
+            field.set(instance, value);
+            return instance;
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to populate field '" + fieldName + "'", e);
         }
     }
+
     private static Field findField(Class<?> clazz, String fieldName) {
         for (Field field : getAllFields(clazz)) {
             if (field.getName().equals(fieldName)) {

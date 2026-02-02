@@ -1,8 +1,8 @@
 package api.models.customer.profile;
 
+import api.models.accounts.AccountResponse;
 import lombok.*;
-import models.BaseModel;
-import api.models.accounts.CreateAccountResponse;
+import api.models.BaseModel;
 
 import java.util.List;
 
@@ -17,5 +17,5 @@ public class ReadProfileResponse extends BaseModel {
     private String password;
     private String name;
     private String role;
-    private List<CreateAccountResponse> accounts;
+    private List<AccountResponse> accounts;
 }

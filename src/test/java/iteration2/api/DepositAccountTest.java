@@ -1,26 +1,27 @@
-package iteration2;
+package iteration2.api;
 
-import generators.RandomModelGenerator;
-import iteration1.BaseTest;
+import api.generators.RandomModelGenerator;
 import api.models.accounts.CreateAccountResponse;
-import models.CreateUserRequest;
-import api.models.accounts.Transaction;
+import api.models.accounts.transactions.TransactionType;
+import common.annotations.UserSession;
+import common.storage.SessionStorage;
+import iteration1.api.BaseTest;
+import api.models.accounts.transactions.Transaction;
 import api.models.accounts.deposit.DepositMoneyRequest;
 import api.models.accounts.deposit.DepositMoneyResponse;
 import api.models.accounts.transactions.ReadAccountTransactionsResponse;
-import models.comparison.ModelAssertions;
-import org.junit.jupiter.api.BeforeAll;
+import api.models.comparison.ModelAssertions;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import requests.skelethon.Endpoint;
-import requests.skelethon.requesters.CrudRequester;
-import requests.skelethon.requesters.ValidatedCrudRequester;
-import requests.steps.AdminSteps;
-import requests.steps.UserSteps;
-import specs.RequestSpecs;
-import specs.ResponseSpecs;
+import api.requests.skelethon.Endpoint;
+import api.requests.skelethon.requesters.CrudRequester;
+import api.requests.skelethon.requesters.ValidatedCrudRequester;
+import api.specs.RequestSpecs;
+import api.specs.ResponseSpecs;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -28,24 +29,21 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 public class DepositAccountTest extends BaseTest {
-    private static CreateUserRequest createUserRequestOwn;
-    private static CreateUserRequest createUserRequestOther;
     private static CreateAccountResponse ownAccount;
 
-    @BeforeAll
-    public static void setUpBeforeClass() {
-        createUserRequestOwn = AdminSteps.createUser();
-        ownAccount = UserSteps.createAccount(createUserRequestOwn.getUsername(), createUserRequestOwn.getPassword());
-        createUserRequestOther = AdminSteps.createUser();
+    @BeforeEach
+    public void setUpBeforeClass() {
+        ownAccount = SessionStorage.getUserSteps().createAccount();
     }
 
     @Test
+    @UserSession(type = "API")
     public void userCanDepositMoneyToHisOwnAccountTest() {
         DepositMoneyRequest depositMoneyRequest = RandomModelGenerator.generateAnnotatedFieldsOnly(DepositMoneyRequest.class);
         depositMoneyRequest.setId(ownAccount.getId());
 
         DepositMoneyResponse depositMoneyResponse = new ValidatedCrudRequester<DepositMoneyResponse>(
-                RequestSpecs.authAsUser(createUserRequestOwn.getUsername(), createUserRequestOwn.getPassword()),
+                RequestSpecs.authAsUser(SessionStorage.getUser().getUsername(), SessionStorage.getUser().getPassword()),
                 Endpoint.ACCOUNTS_DEPOSIT,
                 ResponseSpecs.requestReturnsOK())
                 .post(depositMoneyRequest);
@@ -53,50 +51,57 @@ public class DepositAccountTest extends BaseTest {
         ModelAssertions.assertThatModels(depositMoneyRequest, depositMoneyResponse).match();
 
         ReadAccountTransactionsResponse transactionsResponse = new ValidatedCrudRequester<ReadAccountTransactionsResponse>(
-                RequestSpecs.authAsUser(createUserRequestOwn.getUsername(), createUserRequestOwn.getPassword()),
+                RequestSpecs.authAsUser(SessionStorage.getUser().getUsername(), SessionStorage.getUser().getPassword()),
                 Endpoint.ACCOUNTS_TRANSACTIONS,
                 ResponseSpecs.requestReturnsOK()
         ).get(ownAccount.getId());
 
         ModelAssertions.assertThatModels(depositMoneyRequest, transactionsResponse).match();
 
-        List<Transaction> transactions = UserSteps.getAllAccountTransactions(createUserRequestOwn.getUsername(),
-                        createUserRequestOwn.getPassword(), ownAccount.getId())
-                .stream().filter(transaction -> transaction.getType().contains("DEPOSIT") &&
-                        transaction.getAmount() == depositMoneyResponse.getBalance() &&
-                        transaction.getRelatedAccountId() == ownAccount.getId())
-                .toList();
+        Transaction expectedTransaction = Transaction.builder()
+                .amount(depositMoneyResponse.getBalance())
+                .type(TransactionType.DEPOSIT)
+                .relatedAccountId(ownAccount.getId())
+                .build();
 
-        assertThat(transactions.size()).isEqualTo(1);
+        List<Transaction> depositTransaction = SessionStorage.getUserSteps()
+                .getAccountTransactionsByParams(ownAccount.getId(), expectedTransaction);
+
+        Assertions.assertThat(depositTransaction.size()).isEqualTo(1);
     }
 
     @Test
+    @UserSession(type = "API", value = 2)
     public void userCannotDepositMoneyToNotHisAccountTest() {
         DepositMoneyRequest depositMoneyRequest = RandomModelGenerator.generateAnnotatedFieldsOnly(DepositMoneyRequest.class);
         depositMoneyRequest.setId(ownAccount.getId());
 
         new CrudRequester(
-                RequestSpecs.authAsUser(createUserRequestOther.getUsername(), createUserRequestOther.getPassword()),
+                RequestSpecs.authAsUser(SessionStorage.getUser(2).getUsername(), SessionStorage.getUser(2).getPassword()),
                 Endpoint.ACCOUNTS_DEPOSIT,
                 ResponseSpecs.requestReturnsForbiddenRequest())
                 .post(depositMoneyRequest);
 
-        List<Transaction> transactions = UserSteps.getAllAccountTransactions(createUserRequestOwn.getUsername(),
-                        createUserRequestOwn.getPassword(), ownAccount.getId()).stream().filter(transaction -> transaction.getType().contains("DEPOSIT") &&
-                        transaction.getAmount() == depositMoneyRequest.getBalance() &&
-                        transaction.getRelatedAccountId() == ownAccount.getId())
-                .toList();
+        Transaction expectedTransaction = Transaction.builder()
+                .amount(depositMoneyRequest.getBalance())
+                .type(TransactionType.DEPOSIT)
+                .relatedAccountId(ownAccount.getId())
+                .build();
+
+        List<Transaction> transactions = SessionStorage.getUserSteps()
+                .getAccountTransactionsByParams(ownAccount.getId(), expectedTransaction);
 
         assertThat(transactions.size()).isZero();
     }
 
     @Test
+    @UserSession(type = "API")
     public void userCannotDepositMoneyToNotExistedAccountTest() {
         DepositMoneyRequest depositMoneyRequest = RandomModelGenerator.generateAnnotatedFieldsOnly(DepositMoneyRequest.class);
         depositMoneyRequest.setId(-1);
 
         new CrudRequester(
-                RequestSpecs.authAsUser(createUserRequestOwn.getUsername(), createUserRequestOwn.getPassword()),
+                RequestSpecs.authAsUser(SessionStorage.getUser().getUsername(), SessionStorage.getUser().getPassword()),
                 Endpoint.ACCOUNTS_DEPOSIT,
                 ResponseSpecs.requestReturnsForbiddenRequest())
                 .post(depositMoneyRequest);
@@ -113,6 +118,7 @@ public class DepositAccountTest extends BaseTest {
 
     @MethodSource("depositInvalidData")
     @ParameterizedTest(name = "Deposit {0} should return error: {1}")
+    @UserSession(type = "API")
     public void userCanDepositInvalidMoneyToHisOwnAccountTest(double balance, String errorValue) {
         DepositMoneyRequest depositMoneyRequest = DepositMoneyRequest.builder()
                 .id(ownAccount.getId())
@@ -120,17 +126,19 @@ public class DepositAccountTest extends BaseTest {
                 .build();
 
         new CrudRequester(
-                RequestSpecs.authAsUser(createUserRequestOwn.getUsername(), createUserRequestOwn.getPassword()),
+                RequestSpecs.authAsUser(SessionStorage.getUser().getUsername(), SessionStorage.getUser().getPassword()),
                 Endpoint.ACCOUNTS_DEPOSIT,
                 ResponseSpecs.requestReturnsBadRequest(errorValue))
                 .post(depositMoneyRequest);
 
-        List<Transaction> transactions = UserSteps.getAllAccountTransactions(createUserRequestOwn.getUsername(),
-                        createUserRequestOwn.getPassword(), ownAccount.getId())
-                .stream().filter(transaction -> transaction.getType().contains("DEPOSIT") &&
-                        transaction.getAmount() == balance &&
-                        transaction.getRelatedAccountId() == ownAccount.getId())
-                .toList();
+        Transaction expectedTransaction = Transaction.builder()
+                .amount(balance)
+                .type(TransactionType.DEPOSIT)
+                .relatedAccountId(ownAccount.getId())
+                .build();
+
+        List<Transaction> transactions = SessionStorage.getUserSteps()
+                .getAccountTransactionsByParams(ownAccount.getId(), expectedTransaction);
 
         assertThat(transactions.size()).isZero();
     }

@@ -1,8 +1,8 @@
 package api.models.accounts.deposit;
 
-import generators.GeneratingRule;
+import api.generators.GeneratingRule;
 import lombok.*;
-import models.BaseModel;
+import api.models.BaseModel;
 
 @EqualsAndHashCode(callSuper = true)
 @Data

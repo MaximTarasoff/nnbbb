@@ -2,8 +2,18 @@ package api.requests.skelethon;
 
 
 import api.models.*;
+import api.models.accounts.CreateAccountResponse;
+import api.models.accounts.deposit.DepositMoneyRequest;
+import api.models.accounts.deposit.DepositMoneyResponse;
+import api.models.accounts.transactions.ReadAccountTransactionsResponse;
+import api.models.accounts.transfer.TransferMoneyRequest;
+import api.models.accounts.transfer.TransferMoneyResponse;
+import api.models.customer.profile.ReadProfileResponse;
+import api.models.customer.profile.UpdateProfileRequest;
+import api.models.customer.profile.UpdateProfileResponse;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+
 
 @Getter
 @AllArgsConstructor
@@ -17,6 +27,10 @@ public enum Endpoint {
             LoginResponse.class
     ),
     ACCOUNTS("/accounts",
+            BaseModel.class,
+            CreateAccountResponse.class
+    ),
+    CUSTOMER_ACCOUNTS("/customer/accounts",
             BaseModel.class,
             CreateAccountResponse.class
     ),
@@ -35,10 +49,6 @@ public enum Endpoint {
     CUSTOMER_PROFILE("/customer/profile",
             UpdateProfileRequest.class,
             UpdateProfileResponse.class
-    ),
-    CUSTOMER_ACCOUNTS("/customer/accounts",
-            BaseModel.class,
-            CreateAccountResponse.class
     ),
     CUSTOMER_PROFILE_GET("/customer/profile",
             BaseModel.class,

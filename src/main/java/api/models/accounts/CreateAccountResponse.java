@@ -1,7 +1,8 @@
 package api.models.accounts;
 
+import api.models.accounts.transactions.Transaction;
 import lombok.*;
-import models.BaseModel;
+import api.models.BaseModel;
 
 import java.util.List;
 
