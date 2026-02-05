@@ -1,7 +1,6 @@
 package api.specs;
 
 import api.configs.Config;
-import api.models.CreateUserRequest;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.filter.log.RequestLoggingFilter;
 import io.restassured.filter.log.ResponseLoggingFilter;
@@ -15,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 public class RequestSpecs {
-    private static Map<String, String> authHeaders =new HashMap<>
+    private static final Map<String, String> authHeaders =new HashMap<>
             (Map.of("admin", "Basic YWRtaW46YWRtaW4="));
 
     //класс один на всех поэтому запрещаем создание объектов

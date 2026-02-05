@@ -26,11 +26,11 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 public class UpdateProfileTest extends BaseUiTest {
-    private static UpdateProfileRequest updateProfileRequest;
+    private static final ThreadLocal<UpdateProfileRequest> updateProfileRequest = new ThreadLocal<>();
 
     @BeforeEach
     public void setup() {
-        updateProfileRequest = RandomModelGenerator.generate(UpdateProfileRequest.class);
+        updateProfileRequest.set(RandomModelGenerator.generate(UpdateProfileRequest.class));
 
         new EditProfile()
                 .open()
@@ -41,17 +41,17 @@ public class UpdateProfileTest extends BaseUiTest {
     @Test
     @UserSession
     public void AuthUserCanUpdateProfileNameTest() {
-        new EditProfile().enterName(updateProfileRequest.getName())
+        new EditProfile().enterName(updateProfileRequest.get().getName())
                 .saveChanges()
                 .checkAlertMessageAndAccept(ProfileAlert.NAME_UPDATE_SUCCESSFULLY.getMessage())
                 .clickHomeButton()
                 .getPage(UserDashboard.class)
                 .getWelcomeText()
                 .shouldBe(Condition.visible)
-                .shouldHave(Condition.text("Welcome, " + updateProfileRequest.getName() + "!"));
+                .shouldHave(Condition.text("Welcome, " + updateProfileRequest.get().getName() + "!"));
 
         ReadProfileResponse readCustomerResponse = SessionStorage.getProfileSteps().getProfileInfo();
-        assertThat(readCustomerResponse.getName()).isEqualTo(updateProfileRequest.getName());
+        assertThat(readCustomerResponse.getName()).isEqualTo(updateProfileRequest.get().getName());
     }
 
     @Test
@@ -61,19 +61,19 @@ public class UpdateProfileTest extends BaseUiTest {
                 RequestSpecs.authAsUser(SessionStorage.getUser().getUsername(), SessionStorage.getUser().getPassword()),
                 Endpoint.CUSTOMER_PROFILE,
                 ResponseSpecs.requestReturnsOK("message", "Profile updated successfully"))
-                .update(updateProfileRequest);
+                .update(updateProfileRequest.get());
 
-        new EditProfile().enterName(updateProfileRequest.getName())
+        new EditProfile().enterName(updateProfileRequest.get().getName())
                 .saveChanges()
                 .checkAlertMessageAndAccept(ProfileAlert.NAME_CANNOT_BE_SAME.getMessage())
                 .clickHomeButton()
                 .getPage(UserDashboard.class)
                 .getWelcomeText()
                 .shouldBe(Condition.visible)
-                .shouldHave(Condition.text("Welcome, " + updateProfileRequest.getName() + "!"));
+                .shouldHave(Condition.text("Welcome, " + updateProfileRequest.get().getName() + "!"));
 
         ReadProfileResponse readCustomerResponse = SessionStorage.getProfileSteps().getProfileInfo();
-        assertThat(readCustomerResponse.getName()).isEqualTo(updateProfileRequest.getName());
+        assertThat(readCustomerResponse.getName()).isEqualTo(updateProfileRequest.get().getName());
     }
 
     public static Stream<Arguments> nameInvalidData() {

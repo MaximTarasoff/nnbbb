@@ -26,13 +26,13 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class DepositAccountTest extends BaseUiTest {
     private double randomAmount;
-    private CreateAccountResponse ownAccount;
-    private CreateAccountResponse otherAccount;
+    private static final ThreadLocal<CreateAccountResponse> ownAccount = new ThreadLocal<>();
+    private static final ThreadLocal<CreateAccountResponse> otherAccount = new ThreadLocal<>();
 
     @BeforeEach
     public void setUp() {
         randomAmount = RandomModelGenerator.generate(DepositMoneyResponse.class).getBalance();
-        ownAccount = SessionStorage.getUserSteps().createAccount();
+        ownAccount.set(SessionStorage.getUserSteps().createAccount());
 
         new DepositMoney()
                 .open()
@@ -44,10 +44,10 @@ public class DepositAccountTest extends BaseUiTest {
     @UserSession
     public void userCanDepositMoneyToHisOwnAccountTest() {
         new DepositMoney()
-                .selectAccountInListByName(ownAccount.getAccountNumber())
+                .selectAccountInListByName(ownAccount.get().getAccountNumber())
                 .enterAmount(randomAmount)
                 .depositMoney()
-                .checkAlertMessageAndAccept(String.format(BankAlert.DEPOSIT_SUCCESSFULLY.getMessage(), randomAmount, ownAccount.getAccountNumber()));
+                .checkAlertMessageAndAccept(String.format(BankAlert.DEPOSIT_SUCCESSFULLY.getMessage(), randomAmount, ownAccount.get().getAccountNumber()));
 
         List<CreateAccountResponse> createdAccounts = SessionStorage.getUserSteps().getAllAccounts();
         assertThat(createdAccounts.getFirst().getBalance()).isEqualTo(randomAmount);
@@ -55,11 +55,11 @@ public class DepositAccountTest extends BaseUiTest {
         Transaction expectedTransaction = Transaction.builder()
                 .amount(randomAmount)
                 .type(TransactionType.DEPOSIT)
-                .relatedAccountId(ownAccount.getId())
+                .relatedAccountId(ownAccount.get().getId())
                 .build();
 
         List<Transaction> depositTransaction = SessionStorage.getUserSteps()
-                .getAccountTransactionsByParams(ownAccount.getId(), expectedTransaction);
+                .getAccountTransactionsByParams(ownAccount.get().getId(), expectedTransaction);
 
         assertThat(depositTransaction.size()).isEqualTo(1);
     }
@@ -67,10 +67,10 @@ public class DepositAccountTest extends BaseUiTest {
     @Test
     @UserSession(value = 2)
     public void userCannotDepositMoneyToNotHisAccountTest() {
-        otherAccount = SessionStorage.getUserSteps(2).createAccount();
+        otherAccount.set(SessionStorage.getUserSteps(2).createAccount());
 
         boolean isOtherAccountInList = new DepositMoney().getAllAccounts()
-                .stream().anyMatch(account -> account.getAccountName().equals(otherAccount.getAccountNumber()));
+                .stream().anyMatch(account -> account.getAccountName().equals(otherAccount.get().getAccountNumber()));
 
         assertFalse(isOtherAccountInList);
     }
@@ -88,7 +88,7 @@ public class DepositAccountTest extends BaseUiTest {
     @UserSession
     public void userCanDepositInvalidMoneyToHisOwnAccountTest(double balance, String errorValue) {
         new DepositMoney()
-                .selectAccountInListByName(ownAccount.getAccountNumber())
+                .selectAccountInListByName(ownAccount.get().getAccountNumber())
                 .enterAmount(balance)
                 .depositMoney()
                 .checkAlertMessageAndAccept(errorValue);
@@ -96,11 +96,11 @@ public class DepositAccountTest extends BaseUiTest {
         Transaction expectedTransaction = Transaction.builder()
                 .amount(balance)
                 .type(TransactionType.DEPOSIT)
-                .relatedAccountId(ownAccount.getId())
+                .relatedAccountId(ownAccount.get().getId())
                 .build();
 
         List<Transaction> depositTransaction = SessionStorage.getUserSteps()
-                .getAccountTransactionsByParams(ownAccount.getId(), expectedTransaction);
+                .getAccountTransactionsByParams(ownAccount.get().getId(), expectedTransaction);
 
         assertThat(depositTransaction.size()).isZero();
     }
@@ -108,5 +108,6 @@ public class DepositAccountTest extends BaseUiTest {
     @AfterEach
     public void tearDown() {
         SessionStorage.clear();
+        ownAccount.remove();
     }
 }

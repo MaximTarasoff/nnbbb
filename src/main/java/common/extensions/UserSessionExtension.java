@@ -2,8 +2,10 @@ package common.extensions;
 
 import api.models.CreateUserRequest;
 import api.requests.steps.AdminSteps;
+import com.codeborne.selenide.WebDriverRunner;
 import common.annotations.UserSession;
 import common.storage.SessionStorage;
+import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import ui.pages.BasePage;
@@ -11,7 +13,7 @@ import ui.pages.BasePage;
 import java.util.LinkedList;
 import java.util.List;
 
-public class UserSessionExtension implements BeforeEachCallback {
+public class UserSessionExtension implements BeforeEachCallback, AfterEachCallback {
     @Override
     public void beforeEach(ExtensionContext extensionContext) {
         // Шаг 1: проверка, что у теста есть аннотация UserSession
@@ -36,5 +38,10 @@ public class UserSessionExtension implements BeforeEachCallback {
                 BasePage.authAsUser(SessionStorage.getUser(authAsUser));
             }
         }
+    }
+
+    @Override
+    public void afterEach(ExtensionContext extensionContext) throws Exception {
+        WebDriverRunner.closeWebDriver();
     }
 }

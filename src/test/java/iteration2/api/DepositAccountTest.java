@@ -12,6 +12,7 @@ import api.models.accounts.deposit.DepositMoneyResponse;
 import api.models.accounts.transactions.ReadAccountTransactionsResponse;
 import api.models.comparison.ModelAssertions;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -29,18 +30,18 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 public class DepositAccountTest extends BaseTest {
-    private static CreateAccountResponse ownAccount;
+    private static final ThreadLocal<CreateAccountResponse> ownAccount = new ThreadLocal<>();
 
     @BeforeEach
     public void setUpBeforeClass() {
-        ownAccount = SessionStorage.getUserSteps().createAccount();
+        ownAccount.set(SessionStorage.getUserSteps().createAccount());
     }
 
     @Test
     @UserSession(type = "API")
     public void userCanDepositMoneyToHisOwnAccountTest() {
         DepositMoneyRequest depositMoneyRequest = RandomModelGenerator.generateAnnotatedFieldsOnly(DepositMoneyRequest.class);
-        depositMoneyRequest.setId(ownAccount.getId());
+        depositMoneyRequest.setId(ownAccount.get().getId());
 
         DepositMoneyResponse depositMoneyResponse = new ValidatedCrudRequester<DepositMoneyResponse>(
                 RequestSpecs.authAsUser(SessionStorage.getUser().getUsername(), SessionStorage.getUser().getPassword()),
@@ -54,18 +55,18 @@ public class DepositAccountTest extends BaseTest {
                 RequestSpecs.authAsUser(SessionStorage.getUser().getUsername(), SessionStorage.getUser().getPassword()),
                 Endpoint.ACCOUNTS_TRANSACTIONS,
                 ResponseSpecs.requestReturnsOK()
-        ).get(ownAccount.getId());
+        ).get(ownAccount.get().getId());
 
         ModelAssertions.assertThatModels(depositMoneyRequest, transactionsResponse).match();
 
         Transaction expectedTransaction = Transaction.builder()
                 .amount(depositMoneyResponse.getBalance())
                 .type(TransactionType.DEPOSIT)
-                .relatedAccountId(ownAccount.getId())
+                .relatedAccountId(ownAccount.get().getId())
                 .build();
 
         List<Transaction> depositTransaction = SessionStorage.getUserSteps()
-                .getAccountTransactionsByParams(ownAccount.getId(), expectedTransaction);
+                .getAccountTransactionsByParams(ownAccount.get().getId(), expectedTransaction);
 
         Assertions.assertThat(depositTransaction.size()).isEqualTo(1);
     }
@@ -74,7 +75,7 @@ public class DepositAccountTest extends BaseTest {
     @UserSession(type = "API", value = 2)
     public void userCannotDepositMoneyToNotHisAccountTest() {
         DepositMoneyRequest depositMoneyRequest = RandomModelGenerator.generateAnnotatedFieldsOnly(DepositMoneyRequest.class);
-        depositMoneyRequest.setId(ownAccount.getId());
+        depositMoneyRequest.setId(ownAccount.get().getId());
 
         new CrudRequester(
                 RequestSpecs.authAsUser(SessionStorage.getUser(2).getUsername(), SessionStorage.getUser(2).getPassword()),
@@ -85,11 +86,11 @@ public class DepositAccountTest extends BaseTest {
         Transaction expectedTransaction = Transaction.builder()
                 .amount(depositMoneyRequest.getBalance())
                 .type(TransactionType.DEPOSIT)
-                .relatedAccountId(ownAccount.getId())
+                .relatedAccountId(ownAccount.get().getId())
                 .build();
 
         List<Transaction> transactions = SessionStorage.getUserSteps()
-                .getAccountTransactionsByParams(ownAccount.getId(), expectedTransaction);
+                .getAccountTransactionsByParams(ownAccount.get().getId(), expectedTransaction);
 
         assertThat(transactions.size()).isZero();
     }
@@ -121,7 +122,7 @@ public class DepositAccountTest extends BaseTest {
     @UserSession(type = "API")
     public void userCanDepositInvalidMoneyToHisOwnAccountTest(double balance, String errorValue) {
         DepositMoneyRequest depositMoneyRequest = DepositMoneyRequest.builder()
-                .id(ownAccount.getId())
+                .id(ownAccount.get().getId())
                 .balance(balance)
                 .build();
 
@@ -134,12 +135,17 @@ public class DepositAccountTest extends BaseTest {
         Transaction expectedTransaction = Transaction.builder()
                 .amount(balance)
                 .type(TransactionType.DEPOSIT)
-                .relatedAccountId(ownAccount.getId())
+                .relatedAccountId(ownAccount.get().getId())
                 .build();
 
         List<Transaction> transactions = SessionStorage.getUserSteps()
-                .getAccountTransactionsByParams(ownAccount.getId(), expectedTransaction);
+                .getAccountTransactionsByParams(ownAccount.get().getId(), expectedTransaction);
 
         assertThat(transactions.size()).isZero();
+    }
+
+    @AfterEach
+    void tearDown() {
+        ownAccount.remove();
     }
 }
