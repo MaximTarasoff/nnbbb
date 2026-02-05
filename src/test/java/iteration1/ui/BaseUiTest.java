@@ -23,6 +23,7 @@ public class BaseUiTest extends BaseTest {
         Configuration.browser = Config.getProperty("ui.browser");
         Configuration.browserSize = Config.getProperty("ui.browserSize");
         Configuration.timeout = Long.parseLong(Config.getProperty("ui.timeout"));
+        Configuration.headless = false;
 
         Configuration.browserCapabilities.setCapability("selenoid:options",
                 Map.of(

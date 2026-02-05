@@ -26,7 +26,7 @@ public class CreateUserTest extends BaseUiTest {
                 .checkAlertMessageAndAccept(BankAlert.USER_CREATED_SUCCESSFULLY.getMessage())
                 .findUserByUsername(newUser.getUsername());
 
-    assertThat(newUserBage).as("UserBage should exist on Dashboard after user creation").isNotNull();
+        assertThat(newUserBage).as("UserBage should exist on Dashboard after user creation").isNotNull();
 
         CreateUserResponse createdUser = AdminSteps.getAllUsers().stream()
                 .filter(user -> user.getUsername().equals(newUser.getUsername()))
