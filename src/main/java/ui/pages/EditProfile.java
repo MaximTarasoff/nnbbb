@@ -3,12 +3,10 @@ package ui.pages;
 import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.Selectors;
 import com.codeborne.selenide.SelenideElement;
+import common.utils.RetryUtils;
 import lombok.Getter;
-import org.openqa.selenium.Keys;
 
-import static com.codeborne.selenide.Condition.value;
-import static com.codeborne.selenide.Selenide.$;
-import static com.codeborne.selenide.Selenide.actions;
+import static com.codeborne.selenide.Selenide.*;
 
 @Getter
 public class EditProfile extends BasePage<EditProfile> {
@@ -22,14 +20,24 @@ public class EditProfile extends BasePage<EditProfile> {
     }
 
     public EditProfile enterName(String name) {
-        nameInput.shouldBe(Condition.enabled, Condition.clickable);
-        actions().moveToElement(nameInput).click().doubleClick().sendKeys(Keys.DELETE).perform();
-        actions().moveToElement(nameInput).click().sendKeys(name).perform();
-        nameInput.shouldBe(value(name));
+        nameInput.shouldBe(Condition.visible, Condition.enabled);
+
+        RetryUtils.retry(
+                () -> {
+                    nameInput.clear();
+                    nameInput.sendKeys(name);
+                    nameInput.pressTab();
+                    return nameInput.getValue();
+                },
+                name::equals,
+                5,
+                1000
+        );
         return this;
     }
 
     public EditProfile saveChanges() {
+        saveChangesButton.shouldBe(Condition.visible, Condition.enabled);
         saveChangesButton.click();
         return this;
     }

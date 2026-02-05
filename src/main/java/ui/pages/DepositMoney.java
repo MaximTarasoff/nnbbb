@@ -9,6 +9,7 @@ import ui.elements.DepositBage;
 import java.util.List;
 
 import static com.codeborne.selenide.Condition.text;
+import static com.codeborne.selenide.Condition.value;
 import static com.codeborne.selenide.Selenide.$;
 
 @Getter
@@ -17,7 +18,7 @@ public class DepositMoney extends BasePage<DepositMoney> {
     private final SelenideElement selectAccountButton = $(Selectors.byClassName("account-selector"));
     private final SelenideElement amountInput = $(Selectors.byAttribute("placeholder", "Enter amount"));
     private final SelenideElement depositButton = $(Selectors.byCssSelector("button.btn-primary"));
-    private final ElementsCollection accountsList = $(Selectors.byClassName("account-selector")).findAll("option");
+    private final SelenideElement accountsList = $(Selectors.byClassName("account-selector"));
 
     @Override
     public String url() {
@@ -25,12 +26,14 @@ public class DepositMoney extends BasePage<DepositMoney> {
     }
 
     public DepositMoney selectAccountInListByName(String accountName) {
-        accountsList.findBy(text(accountName)).click();
+        accountsList.findAll("option").findBy(text(accountName)).click();
+        accountsList.shouldHave(text(accountName));
         return this;
     }
 
     public DepositMoney enterAmount(double amountValue) {
         amountInput.sendKeys(String.valueOf(amountValue));
+        amountInput.shouldHave(value(String.valueOf(amountValue)));
         return this;
     }
 

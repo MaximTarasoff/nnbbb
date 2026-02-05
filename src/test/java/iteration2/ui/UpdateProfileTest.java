@@ -56,7 +56,7 @@ public class UpdateProfileTest extends BaseUiTest {
 
     @Test
     @UserSession
-    public void AuthUserCanUpdateProfileWitSameNameTest() {
+    public void AuthUserCanUpdateProfileWithSameNameTest() {
         new CrudRequester(
                 RequestSpecs.authAsUser(SessionStorage.getUser().getUsername(), SessionStorage.getUser().getPassword()),
                 Endpoint.CUSTOMER_PROFILE,

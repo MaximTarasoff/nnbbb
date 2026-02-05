@@ -1,0 +1,152 @@
+POST http://localhost:4111/api/v1/admin/users
+Authorization: Basic YWRtaW46YWRtaW4=
+Content-Type: application/json
+
+{
+  "username": "KateDiDi",
+  "password": "Kate#1997fhdsfjhds",
+  "role": "USER"
+}
+
+### Positive test: Authorized user can create account
+POST http://localhost:4111/api/v1/accounts
+Authorization: Basic S2F0ZURpRGk6S2F0ZSMxOTk3Zmhkc2ZqaGRz
+Content-Type: application/json
+
+### Positive test: Authorized user can deposit money to account, by account ID
+POST http://localhost:4111/api/v1/accounts/deposit
+Authorization: Basic S2F0ZURpRGk6S2F0ZSMxOTk3Zmhkc2ZqaGRz
+Content-Type: application/json
+
+{
+  "id": 7,
+  "balance": 5000
+}
+
+### Negative test: Authorized user cannot deposit more then 5000 money to account, by account ID
+POST http://localhost:4111/api/v1/accounts/deposit
+Authorization: Basic S2F0ZURpRGk6S2F0ZSMxOTk3Zmhkc2ZqaGRz
+Content-Type: application/json
+
+{
+  "id": 7,
+  "balance": 5000.1
+}
+
+### Negative test: Authorized user cannot deposit <0.01 money to account, by account ID
+POST http://localhost:4111/api/v1/accounts/deposit
+Authorization: Basic S2F0ZURpRGk6S2F0ZSMxOTk3Zmhkc2ZqaGRz
+Content-Type: application/json
+
+{
+  "id": 7,
+  "balance": -120.6
+}
+
+### Negative test: Authorized user cannot deposit money to not existed account, by account ID
+POST http://localhost:4111/api/v1/accounts/deposit
+Authorization: Basic S2F0ZURpRGk6S2F0ZSMxOTk3Zmhkc2ZqaGRz
+Content-Type: application/json
+
+{
+  "id": 1100,
+  "balance": 400.5
+}
+
+### Negative test: Authorized user cannot deposit money to not his account, by account ID
+POST http://localhost:4111/api/v1/accounts/deposit
+Authorization: Basic S2F0ZURpRGk6S2F0ZSMxOTk3Zmhkc2ZqaGRz
+Content-Type: application/json
+
+{
+  "id": 1,
+  "balance": 400.5
+}
+
+### Positive test: Authorized user can transfer money to another his account, by account ID's
+POST http://localhost:4111/api/v1/accounts/transfer
+Authorization: Basic S2F0ZURpRGk6S2F0ZSMxOTk3Zmhkc2ZqaGRz
+Content-Type: application/json
+
+{
+  "senderAccountId": 7,
+  "receiverAccountId": 8,
+  "amount": 150.75
+}
+
+### Positive test: Authorized user can transfer money to not his account, by account ID's
+POST http://localhost:4111/api/v1/accounts/transfer
+Authorization: Basic S2F0ZURpRGk6S2F0ZSMxOTk3Zmhkc2ZqaGRz
+Content-Type: application/json
+
+{
+  "senderAccountId": 7,
+  "receiverAccountId": 1,
+  "amount": 150.75
+}
+
+### Negative test: Authorized user cannot transfer more than 10000 money to another his account, by account ID's
+POST http://localhost:4111/api/v1/accounts/transfer
+Authorization: Basic S2F0ZURpRGk6S2F0ZSMxOTk3Zmhkc2ZqaGRz
+Content-Type: application/json
+
+{
+  "senderAccountId": 7,
+  "receiverAccountId": 8,
+  "amount": 10000.1
+}
+
+### Negative test: Authorized user cannot transfer less than 0.01 money to another his account, by account ID's
+POST http://localhost:4111/api/v1/accounts/transfer
+Authorization: Basic S2F0ZURpRGk6S2F0ZSMxOTk3Zmhkc2ZqaGRz
+Content-Type: application/json
+
+{
+  "senderAccountId": 7,
+  "receiverAccountId": 8,
+  "amount": -10000.1
+}
+
+### Negative test: Authorized user cannot transfer money more then account has to another his account, by account ID's
+POST http://localhost:4111/api/v1/accounts/transfer
+Authorization: Basic S2F0ZURpRGk6S2F0ZSMxOTk3Zmhkc2ZqaGRz
+Content-Type: application/json
+
+{
+  "senderAccountId": 7,
+  "receiverAccountId": 8,
+  "amount": 10000
+}
+
+### Positive tset: check account was created
+GET http://localhost:4111/api/v1/customer/accounts
+Authorization: Basic S2F0ZURpRGk6S2F0ZSMxOTk3Zmhkc2ZqaGRz
+Content-Type: application/json
+
+### Positive tset: Authorized user can update his profile name
+PUT http://localhost:4111/api/v1/customer/profile
+Authorization: Basic S2F0ZURpRGk6S2F0ZSMxOTk3Zmhkc2ZqaGRz
+Content-Type: application/json
+
+{
+  "name": "John Smith"
+}
+
+### Negative tset: Authorized user cannot update his profile name wih one word
+PUT http://localhost:4111/api/v1/customer/profile
+Authorization: Basic S2F0ZURpRGk6S2F0ZSMxOTk3Zmhkc2ZqaGRz
+Content-Type: application/json
+
+{
+  "name": "John"
+}
+
+### Negative tset: Authorized user cannot update his profile name wih more than two word
+PUT http://localhost:4111/api/v1/customer/profile
+Authorization: Basic bzVOOkRFTGJyZ3AwNjgkJg==
+Content-Type: application/json
+
+{
+  "name": "John Cena"
+}
+
