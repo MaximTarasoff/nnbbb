@@ -1,13 +1,16 @@
 package iteration2.ui;
 
+import api.dao.UserDao;
 import api.generators.RandomModelGenerator;
 import api.models.customer.profile.ReadProfileResponse;
 import api.models.customer.profile.UpdateProfileRequest;
 import api.requests.skelethon.Endpoint;
 import api.requests.skelethon.requesters.CrudRequester;
+import api.requests.steps.DataBaseSteps;
 import api.specs.RequestSpecs;
 import api.specs.ResponseSpecs;
 import com.codeborne.selenide.Condition;
+import common.annotations.APIVersion;
 import common.annotations.UserSession;
 import common.storage.SessionStorage;
 import iteration1.ui.BaseUiTest;
@@ -40,6 +43,7 @@ public class UpdateProfileTest extends BaseUiTest {
 
     @Test
     @UserSession
+    @APIVersion("with_database_with_fix")
     public void AuthUserCanUpdateProfileNameTest() {
         new EditProfile().enterName(updateProfileRequest.get().getName())
                 .saveChanges()
@@ -52,11 +56,15 @@ public class UpdateProfileTest extends BaseUiTest {
 
         ReadProfileResponse readCustomerResponse = SessionStorage.getProfileSteps().getProfileInfo();
         assertThat(readCustomerResponse.getName()).isEqualTo(updateProfileRequest.get().getName());
+
+        UserDao userDao = DataBaseSteps.getUserByUsername(SessionStorage.getUser().getUsername());
+        assertThat(userDao.getName()).isEqualTo(updateProfileRequest.get().getName());
     }
 
     @Test
     @UserSession
-    public void AuthUserCanUpdateProfileWithSameNameTest() {
+    @APIVersion("with_database_with_fix")
+    public void AuthUserCannotUpdateProfileWithSameNameTest() {
         new CrudRequester(
                 RequestSpecs.authAsUser(SessionStorage.getUser().getUsername(), SessionStorage.getUser().getPassword()),
                 Endpoint.CUSTOMER_PROFILE,
@@ -74,6 +82,9 @@ public class UpdateProfileTest extends BaseUiTest {
 
         ReadProfileResponse readCustomerResponse = SessionStorage.getProfileSteps().getProfileInfo();
         assertThat(readCustomerResponse.getName()).isEqualTo(updateProfileRequest.get().getName());
+
+        UserDao userDao = DataBaseSteps.getUserByUsername(SessionStorage.getUser().getUsername());
+        assertThat(userDao.getName()).isEqualTo(updateProfileRequest.get().getName());
     }
 
     public static Stream<Arguments> nameInvalidData() {
@@ -86,6 +97,7 @@ public class UpdateProfileTest extends BaseUiTest {
     @MethodSource("nameInvalidData")
     @ParameterizedTest
     @UserSession
+    @APIVersion("with_database_with_fix")
     public void AuthUserCannotUpdateProfileWithInvalidNameTest(String name, String errorValue) {
         new EditProfile().enterName(name)
                 .saveChanges()
@@ -98,6 +110,9 @@ public class UpdateProfileTest extends BaseUiTest {
 
         ReadProfileResponse readProfileResponse = SessionStorage.getProfileSteps().getProfileInfo();
         assertThat(readProfileResponse.getName()).isNotEqualTo(name);
+
+        UserDao userDao = DataBaseSteps.getUserByUsername(SessionStorage.getUser().getUsername());
+        assertThat(userDao.getName()).isNotEqualTo(name);
     }
 
     @AfterEach

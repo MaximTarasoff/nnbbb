@@ -1,6 +1,8 @@
 package iteration1.ui;
 
+import api.dao.AccountDao;
 import api.models.accounts.CreateAccountResponse;
+import api.requests.steps.DataBaseSteps;
 import common.annotations.UserSession;
 import common.storage.SessionStorage;
 import org.junit.jupiter.api.Test;
@@ -25,5 +27,8 @@ public class CreateAccountTest extends BaseUiTest {
                 .checkAlertMessageAndAccept(BankAlert.NEW_ACCOUNT_CREATED.getMessage() + " " + createdAccounts.getFirst().getAccountNumber());
 
         assertThat(createdAccounts.getFirst().getBalance()).isZero();
+
+        AccountDao accountDao = DataBaseSteps.getAccountByAccountNumber(createdAccounts.getFirst().getAccountNumber());
+        assertThat(accountDao).isNotNull();
     }
 }

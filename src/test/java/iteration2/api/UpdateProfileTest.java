@@ -1,10 +1,14 @@
 package iteration2.api;
 
+import api.dao.UserDao;
+import api.dao.comparison.DaoAndModelAssertions;
 import api.generators.RandomModelGenerator;
 import api.models.comparison.ModelAssertions;
 import api.models.customer.profile.ReadProfileResponse;
 import api.models.customer.profile.UpdateProfileRequest;
 import api.models.customer.profile.UpdateProfileResponse;
+import api.requests.steps.DataBaseSteps;
+import common.annotations.APIVersion;
 import common.annotations.UserSession;
 import common.storage.SessionStorage;
 import iteration1.api.BaseTest;
@@ -25,6 +29,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 public class UpdateProfileTest extends BaseTest {
     @Test
     @UserSession(type = "API")
+    @APIVersion("with_database_with_fix")
     public void AuthUserCanUpdateProfileNameTest() {
         UpdateProfileRequest updateProfileRequest = RandomModelGenerator.generate(UpdateProfileRequest.class);
 
@@ -40,6 +45,9 @@ public class UpdateProfileTest extends BaseTest {
 
         assertThat(readCustomerResponse.getName()).isEqualTo(updateProfileRequest.getName());
         ModelAssertions.assertThatModels(readCustomerResponse, createUserResponse).match();
+
+        UserDao userDao = DataBaseSteps.getUserByUsername(SessionStorage.getUser().getUsername());
+        DaoAndModelAssertions.assertThat(updateProfileRequest, userDao).match();
     }
 
     public static Stream<Arguments> nameInvalidData() {
@@ -52,6 +60,7 @@ public class UpdateProfileTest extends BaseTest {
     @MethodSource("nameInvalidData")
     @ParameterizedTest
     @UserSession(type = "API")
+    @APIVersion("with_database_with_fix")
     public void AuthUserCannotUpdateProfileWithInvalidNameTest(String name, String errorValue) {
         UpdateProfileRequest updateProfileRequest =
                 UpdateProfileRequest.builder()
@@ -66,5 +75,8 @@ public class UpdateProfileTest extends BaseTest {
 
         ReadProfileResponse readProfileResponse = SessionStorage.getProfileSteps().getProfileInfo();
         assertThat(readProfileResponse.getName()).isNotEqualTo(name);
+
+        UserDao userDao = DataBaseSteps.getUserByUsername(SessionStorage.getUser().getUsername());
+        assertThat(userDao.getName()).isNull();
     }
 }

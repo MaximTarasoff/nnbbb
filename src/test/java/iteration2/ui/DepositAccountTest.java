@@ -1,11 +1,14 @@
 package iteration2.ui;
 
+import api.dao.TransactionDao;
 import api.generators.RandomModelGenerator;
 import api.models.accounts.CreateAccountResponse;
+import api.models.accounts.deposit.DepositMoneyRequest;
 import api.models.accounts.transactions.Transaction;
-import api.models.accounts.deposit.DepositMoneyResponse;
 import api.models.accounts.transactions.TransactionType;
+import api.requests.steps.DataBaseSteps;
 import com.codeborne.selenide.Condition;
+import common.annotations.APIVersion;
 import common.annotations.UserSession;
 import common.storage.SessionStorage;
 import iteration1.ui.BaseUiTest;
@@ -31,7 +34,7 @@ public class DepositAccountTest extends BaseUiTest {
 
     @BeforeEach
     public void setUp() {
-        randomAmount = RandomModelGenerator.generate(DepositMoneyResponse.class).getBalance();
+        randomAmount = RandomModelGenerator.generate(DepositMoneyRequest.class).getBalance();
         ownAccount.set(SessionStorage.getUserSteps().createAccount());
 
         new DepositMoney()
@@ -42,6 +45,7 @@ public class DepositAccountTest extends BaseUiTest {
 
     @Test
     @UserSession
+    @APIVersion("with_database_with_fix")
     public void userCanDepositMoneyToHisOwnAccountTest() {
         new DepositMoney()
                 .selectAccountInListByName(ownAccount.get().getAccountNumber())
@@ -62,10 +66,14 @@ public class DepositAccountTest extends BaseUiTest {
                 .getAccountTransactionsByParams(ownAccount.get().getId(), expectedTransaction);
 
         assertThat(depositTransaction.size()).isEqualTo(1);
+
+        TransactionDao transactionDao = DataBaseSteps.getTransactionByTransaction(expectedTransaction);
+        assertThat(transactionDao).isNotNull();
     }
 
     @Test
     @UserSession(value = 2)
+    @APIVersion("with_database_with_fix")
     public void userCannotDepositMoneyToNotHisAccountTest() {
         otherAccount.set(SessionStorage.getUserSteps(2).createAccount());
 
@@ -86,6 +94,7 @@ public class DepositAccountTest extends BaseUiTest {
     @MethodSource("depositInvalidData")
     @ParameterizedTest(name = "Deposit {0} should return error: {1}")
     @UserSession
+    @APIVersion("with_database_with_fix")
     public void userCanDepositInvalidMoneyToHisOwnAccountTest(double balance, String errorValue) {
         new DepositMoney()
                 .selectAccountInListByName(ownAccount.get().getAccountNumber())
@@ -103,6 +112,9 @@ public class DepositAccountTest extends BaseUiTest {
                 .getAccountTransactionsByParams(ownAccount.get().getId(), expectedTransaction);
 
         assertThat(depositTransaction.size()).isZero();
+
+        TransactionDao transactionDao = DataBaseSteps.getTransactionByTransaction(expectedTransaction);
+        assertThat(transactionDao).isNull();
     }
 
     @AfterEach

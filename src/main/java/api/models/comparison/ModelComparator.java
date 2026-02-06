@@ -181,15 +181,36 @@ public class ModelComparator {
             return false;
         }
 
-        // Для числовых значений
-        if (value1 instanceof Number && value2 instanceof Number) {
-            double num1 = ((Number) value1).doubleValue();
-            double num2 = ((Number) value2).doubleValue();
-            return Math.abs(num1 - num2) < 0.0001;
+        // Try numeric comparison first
+        Double num1 = tryParseNumber(value1);
+        Double num2 = tryParseNumber(value2);
+
+        if (num1 != null && num2 != null) {
+            // Use tolerance for comparison - 0.01 for 2 decimal places
+            return Math.abs(num1 - num2) < 0.01;
         }
 
-        // Для строковых значений
+        // For boolean values
+        if (value1 instanceof Boolean && value2 instanceof Boolean) {
+            return ((Boolean) value1).equals((Boolean) value2);
+        }
+
+        // For string values (fallback)
         return String.valueOf(value1).equals(String.valueOf(value2));
+    }
+
+    private static Double tryParseNumber(Object value) {
+        if (value instanceof Number) {
+            return ((Number) value).doubleValue();
+        }
+        if (value instanceof String) {
+            try {
+                return Double.parseDouble((String) value);
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        }
+        return null;
     }
 
     public static class ComparisonResult {

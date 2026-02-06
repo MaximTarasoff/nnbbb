@@ -1,10 +1,13 @@
 package iteration1.api;
 
+import api.dao.UserDao;
+import api.dao.comparison.DaoAndModelAssertions;
 import api.generators.RandomModelGenerator;
 import api.models.CreateUserRequest;
 import api.models.CreateUserResponse;
 import api.models.UserRole;
 import api.models.comparison.ModelAssertions;
+import api.requests.steps.DataBaseSteps;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -18,20 +21,30 @@ import api.specs.ResponseSpecs;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 public class CreateUserTest extends BaseTest {
 
     @Test
     public void adminCanCreateUserWithCorrectDataTest() {
+        //подготовка данных
         CreateUserRequest createdUserRequest =
                 RandomModelGenerator.generate(CreateUserRequest.class);
 
+        //post запрос
         CreateUserResponse createUserResponse = new ValidatedCrudRequester<CreateUserResponse>(
                 RequestSpecs.adminSpec(),
                 Endpoint.ADMIN_USER,
                 ResponseSpecs.entityWasCreated())
                 .post(createdUserRequest);
 
+        //Get зарос для проверки созданного юзера
+
         ModelAssertions.assertThatModels(createdUserRequest, createUserResponse).match();
+
+        // Проверка через базу данных
+        UserDao userDao = DataBaseSteps.getUserByUsername(createdUserRequest.getUsername());
+        DaoAndModelAssertions.assertThat(createUserResponse, userDao).match();
     }
 
     public static Stream<Arguments> userInvalidData() {
@@ -58,5 +71,8 @@ public class CreateUserTest extends BaseTest {
                 Endpoint.ADMIN_USER,
                 ResponseSpecs.requestReturnsBadRequest(errorKey, errorValues))
                 .post(createdUser);
+
+        assertNull(DataBaseSteps.getUserByUsername(createdUser.getUsername()));
+
     }
 }
