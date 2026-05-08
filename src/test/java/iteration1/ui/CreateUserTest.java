@@ -1,10 +1,12 @@
 package iteration1.ui;
 
+import api.dao.UserDao;
 import api.requests.steps.AdminSteps;
 import api.generators.RandomModelGenerator;
 import api.models.CreateUserRequest;
 import api.models.CreateUserResponse;
 import api.models.comparison.ModelAssertions;
+import api.requests.steps.DataBaseSteps;
 import common.annotations.AdminSession;
 import org.junit.jupiter.api.Test;
 import ui.elements.UserBage;
@@ -33,6 +35,9 @@ public class CreateUserTest extends BaseUiTest {
                 .findFirst().get();
 
         ModelAssertions.assertThatModels(newUser, createdUser).match();
+
+        UserDao userDao = DataBaseSteps.getUserByUsername(createdUser.getUsername());
+        assertThat(userDao).isNotNull();
     }
 
     @Test
@@ -47,6 +52,7 @@ public class CreateUserTest extends BaseUiTest {
                 .getAllUsers().stream().noneMatch(userBage -> userBage.getUsername().equals(newUser.getUsername())));
 
         long usersWithSameUsernameAsNewUser = AdminSteps.getAllUsers().stream().filter(user -> user.getUsername().equals(newUser.getUsername())).count();
-        assertThat(usersWithSameUsernameAsNewUser).isZero();
+        softly.assertThat(usersWithSameUsernameAsNewUser).isZero();
+        softly.assertThat(DataBaseSteps.getUserByUsername("a")).isNull();
     }
 }

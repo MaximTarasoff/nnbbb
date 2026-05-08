@@ -10,16 +10,16 @@ Content-Type: application/json
 
 ### Positive test: Authorized user can create account
 POST http://localhost:4111/api/v1/accounts
-Authorization: Basic S2F0ZURpRGk6S2F0ZSMxOTk3Zmhkc2ZqaGRz
+Authorization: Basic S2F0ZTBkZGRkNTY3OTk6S2F0ZSMxOTk3Zmhkc2ZqaGRz
 Content-Type: application/json
 
 ### Positive test: Authorized user can deposit money to account, by account ID
 POST http://localhost:4111/api/v1/accounts/deposit
-Authorization: Basic S2F0ZURpRGk6S2F0ZSMxOTk3Zmhkc2ZqaGRz
+Authorization: Basic S2F0ZTBkZGRkNTY3OTk6S2F0ZSMxOTk3Zmhkc2ZqaGRz
 Content-Type: application/json
 
 {
-  "id": 7,
+  "id": 107,
   "balance": 5000
 }
 

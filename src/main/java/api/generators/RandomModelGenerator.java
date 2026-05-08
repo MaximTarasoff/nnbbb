@@ -149,7 +149,9 @@ public class RandomModelGenerator {
         } else if (type.equals(Long.class) || type.equals(long.class)) {
             return (long) (min + random.nextDouble() * (max - min + 1));
         } else if (type.equals(Double.class) || type.equals(double.class)) {
-            return min + random.nextDouble() * (max - min);
+            double value = min + random.nextDouble() * (max - min);
+            // Округляем до двух знаков после запятой
+            return Math.round(value * 100.0) / 100.0;
         } else {
             throw new IllegalArgumentException("Min/max rules only supported for numeric types");
         }

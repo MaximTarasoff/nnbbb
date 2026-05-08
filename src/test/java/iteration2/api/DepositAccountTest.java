@@ -1,8 +1,12 @@
 package iteration2.api;
 
+import api.dao.TransactionDao;
+import api.dao.comparison.DaoAndModelAssertions;
 import api.generators.RandomModelGenerator;
 import api.models.accounts.CreateAccountResponse;
 import api.models.accounts.transactions.TransactionType;
+import api.requests.steps.DataBaseSteps;
+import common.annotations.APIVersion;
 import common.annotations.UserSession;
 import common.storage.SessionStorage;
 import iteration1.api.BaseTest;
@@ -39,6 +43,7 @@ public class DepositAccountTest extends BaseTest {
 
     @Test
     @UserSession(type = "API")
+    @APIVersion("with_database_with_fix")
     public void userCanDepositMoneyToHisOwnAccountTest() {
         DepositMoneyRequest depositMoneyRequest = RandomModelGenerator.generateAnnotatedFieldsOnly(DepositMoneyRequest.class);
         depositMoneyRequest.setId(ownAccount.get().getId());
@@ -69,10 +74,14 @@ public class DepositAccountTest extends BaseTest {
                 .getAccountTransactionsByParams(ownAccount.get().getId(), expectedTransaction);
 
         Assertions.assertThat(depositTransaction.size()).isEqualTo(1);
+
+        TransactionDao transactionDao = DataBaseSteps.getTransactionByTransaction(expectedTransaction);
+        DaoAndModelAssertions.assertThat(depositMoneyResponse, transactionDao).match();
     }
 
     @Test
     @UserSession(type = "API", value = 2)
+    @APIVersion("with_database_with_fix")
     public void userCannotDepositMoneyToNotHisAccountTest() {
         DepositMoneyRequest depositMoneyRequest = RandomModelGenerator.generateAnnotatedFieldsOnly(DepositMoneyRequest.class);
         depositMoneyRequest.setId(ownAccount.get().getId());
@@ -91,8 +100,10 @@ public class DepositAccountTest extends BaseTest {
 
         List<Transaction> transactions = SessionStorage.getUserSteps()
                 .getAccountTransactionsByParams(ownAccount.get().getId(), expectedTransaction);
-
         assertThat(transactions.size()).isZero();
+
+        TransactionDao transactionDao = DataBaseSteps.getTransactionByTransaction(expectedTransaction);
+        assertThat(transactionDao).isNull();
     }
 
     @Test
@@ -109,7 +120,7 @@ public class DepositAccountTest extends BaseTest {
     }
 
 
-    public static Stream<Arguments> depositInvalidData() {
+    public static Stream<Arguments> depositInvalidDataV1() {
         return Stream.of(
                 Arguments.of(0.009, "Deposit amount must be at least 0.01"),
                 Arguments.of(-5000, "Deposit amount must be at least 0.01"),
@@ -117,9 +128,10 @@ public class DepositAccountTest extends BaseTest {
         );
     }
 
-    @MethodSource("depositInvalidData")
+    @MethodSource("depositInvalidDataV1")
     @ParameterizedTest(name = "Deposit {0} should return error: {1}")
     @UserSession(type = "API")
+    @APIVersion("with_validation_fix")
     public void userCanDepositInvalidMoneyToHisOwnAccountTest(double balance, String errorValue) {
         DepositMoneyRequest depositMoneyRequest = DepositMoneyRequest.builder()
                 .id(ownAccount.get().getId())
@@ -142,6 +154,48 @@ public class DepositAccountTest extends BaseTest {
                 .getAccountTransactionsByParams(ownAccount.get().getId(), expectedTransaction);
 
         assertThat(transactions.size()).isZero();
+
+        TransactionDao transactionDao = DataBaseSteps.getTransactionByTransaction(expectedTransaction);
+        assertThat(transactionDao).isNull();
+    }
+
+    public static Stream<Arguments> depositInvalidDataV2() {
+        return Stream.of(
+                Arguments.of(0.009, "Deposit amount must be at least 0.01"),
+                Arguments.of(-5000, "Invalid account or amount"),
+                Arguments.of(5000.001, "Deposit amount exceeds the 5000 limit")
+        );
+    }
+
+    @MethodSource("depositInvalidDataV2")
+    @ParameterizedTest(name = "Deposit {0} should return error: {1}")
+    @UserSession(type = "API")
+    @APIVersion("with_database_with_fix")
+    public void userCanDepositInvalidMoneyToHisOwnAccountTestV2(double balance, String errorValue) {
+        DepositMoneyRequest depositMoneyRequest = DepositMoneyRequest.builder()
+                .id(ownAccount.get().getId())
+                .balance(balance)
+                .build();
+
+        new CrudRequester(
+                RequestSpecs.authAsUser(SessionStorage.getUser().getUsername(), SessionStorage.getUser().getPassword()),
+                Endpoint.ACCOUNTS_DEPOSIT,
+                ResponseSpecs.requestReturnsBadRequest(errorValue))
+                .post(depositMoneyRequest);
+
+        Transaction expectedTransaction = Transaction.builder()
+                .amount(balance)
+                .type(TransactionType.DEPOSIT)
+                .relatedAccountId(ownAccount.get().getId())
+                .build();
+
+        List<Transaction> transactions = SessionStorage.getUserSteps()
+                .getAccountTransactionsByParams(ownAccount.get().getId(), expectedTransaction);
+
+        assertThat(transactions.size()).isZero();
+
+        TransactionDao transactionDao = DataBaseSteps.getTransactionByTransaction(expectedTransaction);
+        assertThat(transactionDao).isNull();
     }
 
     @AfterEach

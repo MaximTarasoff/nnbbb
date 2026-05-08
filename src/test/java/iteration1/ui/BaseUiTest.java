@@ -2,6 +2,7 @@ package iteration1.ui;
 
 import api.configs.Config;
 import com.codeborne.selenide.Configuration;
+import common.extensions.APIVersionExtensions;
 import common.extensions.AdminSessionExtension;
 import common.extensions.BrowserMatchExtension;
 import common.extensions.UserSessionExtension;
@@ -14,6 +15,7 @@ import java.util.Map;
 @ExtendWith(AdminSessionExtension.class)
 @ExtendWith(UserSessionExtension.class)
 @ExtendWith(BrowserMatchExtension.class)
+@ExtendWith(APIVersionExtensions.class)
 public class BaseUiTest extends BaseTest {
 
     @BeforeAll

@@ -11,9 +11,11 @@ import api.models.BaseModel;
 public class Transaction extends BaseModel {
     private long id;
     private Double amount;
-    private TransactionType  type;
+    private TransactionType type;
     private String timestamp;
+    private String timestampAsString;
     private long relatedAccountId;
+    private Long amountAsDouble;
 
     public boolean matches(Transaction expected) {
         if (expected == null) {
@@ -22,7 +24,10 @@ public class Transaction extends BaseModel {
 
         if (expected.id != 0 && !(expected.id == this.id)) return false;
         if (expected.type != null && expected.type != this.type) return false;
-        if (expected.amount != null && this.amount.compareTo(expected.amount) != 0) return false;
+        if (Math.abs(this.amount - expected.amount) > 0.01) {
+            System.out.println("expected.amount " + expected.amount + " != " + this.amount);
+            return false;
+        }
         if (expected.relatedAccountId != 0
                 && expected.relatedAccountId != this.relatedAccountId) return false;
         return expected.timestamp == null || expected.timestamp.equals(this.timestamp);
