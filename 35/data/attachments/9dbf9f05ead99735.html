@@ -1,0 +1,28 @@
+<div>POST to http://localhost:4111/api/v1/accounts/deposit</div>
+
+    <h4>Body</h4>
+    <div>
+    <pre class="preformated-text">
+{
+    &quot;id&quot;: 27,
+    &quot;balance&quot;: 2066.42
+}    </pre>
+    </div>
+
+    <h4>Headers</h4>
+    <div>
+            <div>Authorization: Basic RkV3MDRYZzpYSVBzZm9iMzYzJCU=</div>
+            <div>Accept: application/json</div>
+            <div>Content-Type: application/json</div>
+    </div>
+
+
+
+    <h4>Curl</h4>
+    <div>
+        curl -v -X POST &#39;http://localhost:4111/api/v1/accounts/deposit&#39; -H &#39;Authorization: Basic RkV3MDRYZzpYSVBzZm9iMzYzJCU=&#39; -H &#39;Accept: application/json&#39; -H &#39;Content-Type: application/json&#39; -d &#39;{
+    &quot;id&quot;: 27,
+    &quot;balance&quot;: 2066.42
+}&#39;
+    </div>
+
