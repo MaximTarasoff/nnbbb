@@ -23,7 +23,7 @@ public class CreateAccountTest extends BaseUiTest {
 
         new UserDashboard().open().createNewAccount();
 
-        RetryUtils.retry(
+        RetryUtils.retry( "Get accounts size more than 0",
                 user::getAllAccounts,
                 accounts -> accounts.size() == 1,
                 20,

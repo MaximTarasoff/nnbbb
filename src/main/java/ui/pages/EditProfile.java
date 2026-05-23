@@ -22,7 +22,7 @@ public class EditProfile extends BasePage<EditProfile> {
     public EditProfile enterName(String name) {
         nameInput.shouldBe(Condition.visible, Condition.enabled);
 
-        RetryUtils.retry(
+        RetryUtils.retry("Enter value " + name + " to field {nameInput}",
                 () -> {
                     nameInput.clear();
                     nameInput.sendKeys(name);

@@ -9,6 +9,7 @@ import api.requests.skelethon.Endpoint;
 import api.requests.skelethon.requesters.ValidatedCrudRequester;
 import api.specs.RequestSpecs;
 import api.specs.ResponseSpecs;
+import common.helpers.StepLogger;
 
 import java.util.List;
 
@@ -22,44 +23,54 @@ public class UserSteps {
     }
 
     public List<CreateAccountResponse> getAllAccounts() {
-        return new ValidatedCrudRequester<CreateAccountResponse>(
-                RequestSpecs.authAsUser(username, password),
-                Endpoint.CUSTOMER_ACCOUNTS,
-                ResponseSpecs.requestReturnsOK()
-        ).getAll(CreateAccountResponse[].class);
+        return StepLogger.log("User " + username + " get all accounts", () -> {
+            return new ValidatedCrudRequester<CreateAccountResponse>(
+                    RequestSpecs.authAsUser(username, password),
+                    Endpoint.CUSTOMER_ACCOUNTS,
+                    ResponseSpecs.requestReturnsOK()
+            ).getAll(CreateAccountResponse[].class);
+        });
     }
 
     public CreateAccountResponse createAccount() {
-        return new ValidatedCrudRequester<CreateAccountResponse>(
-                RequestSpecs.authAsUser(username, password),
-                Endpoint.ACCOUNTS,
-                ResponseSpecs.entityWasCreated())
-                .post(null);
+        return StepLogger.log("User " + username + " create account", () -> {
+            return new ValidatedCrudRequester<CreateAccountResponse>(
+                    RequestSpecs.authAsUser(username, password),
+                    Endpoint.ACCOUNTS,
+                    ResponseSpecs.entityWasCreated())
+                    .post(null);
+        });
     }
 
     public DepositMoneyResponse depositAccountById(long id) {
         DepositMoneyRequest request = RandomModelGenerator.generateAnnotatedFieldsOnly(DepositMoneyRequest.class);
         request.setId(id);
 
-        return new ValidatedCrudRequester<DepositMoneyResponse>(
-                RequestSpecs.authAsUser(username, password),
-                Endpoint.ACCOUNTS_DEPOSIT,
-                ResponseSpecs.requestReturnsOK())
-                .post(request);
+        return StepLogger.log("User " + username + " deposit " + request.getBalance() + " to account with id: " + request.getId(), () -> {
+            return new ValidatedCrudRequester<DepositMoneyResponse>(
+                    RequestSpecs.authAsUser(username, password),
+                    Endpoint.ACCOUNTS_DEPOSIT,
+                    ResponseSpecs.requestReturnsOK())
+                    .post(request);
+        });
     }
 
     public List<Transaction> getAllTransactionsByAccountId(long accountId) {
-        return new ValidatedCrudRequester<Transaction>(
-                RequestSpecs.authAsUser(username, password),
-                Endpoint.ACCOUNTS_TRANSACTIONS,
-                ResponseSpecs.requestReturnsOK()
-        ).getAll(Transaction[].class, accountId);
+        return StepLogger.log("Get all transactions by account id: " + accountId, () -> {
+            return new ValidatedCrudRequester<Transaction>(
+                    RequestSpecs.authAsUser(username, password),
+                    Endpoint.ACCOUNTS_TRANSACTIONS,
+                    ResponseSpecs.requestReturnsOK()
+            ).getAll(Transaction[].class, accountId);
+        });
     }
 
     public List<Transaction> getAccountTransactionsByParams(long accountId, Transaction expectedTransaction) {
-        return getAllTransactionsByAccountId(accountId)
-                .stream()
-                .filter(t -> t.matches(expectedTransaction))
-                .toList();
+        return StepLogger.log("Get all transactions by account id=" + accountId + " and expected transaction id=" + expectedTransaction.getId(), () -> {
+            return getAllTransactionsByAccountId(accountId)
+                    .stream()
+                    .filter(t -> t.matches(expectedTransaction))
+                    .toList();
+        });
     }
 }
