@@ -2,10 +2,9 @@ package iteration1.ui;
 
 import api.configs.Config;
 import com.codeborne.selenide.Configuration;
-import common.extensions.APIVersionExtensions;
-import common.extensions.AdminSessionExtension;
-import common.extensions.BrowserMatchExtension;
-import common.extensions.UserSessionExtension;
+import com.codeborne.selenide.logevents.SelenideLogger;
+import common.extensions.*;
+import io.qameta.allure.selenide.AllureSelenide;
 import iteration1.api.BaseTest;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,7 +24,12 @@ public class BaseUiTest extends BaseTest {
         Configuration.browser = Config.getProperty("ui.browser");
         Configuration.browserSize = Config.getProperty("ui.browserSize");
         Configuration.timeout = Long.parseLong(Config.getProperty("ui.timeout"));
+        Configuration.screenshots = true;
+        Configuration.savePageSource = false;
         Configuration.headless = false;
+        SelenideLogger.addListener("AllureSelenide", new AllureSelenide()
+                .screenshots(true)
+                .savePageSource(true));
 
         Configuration.browserCapabilities.setCapability("selenoid:options",
                 Map.of(

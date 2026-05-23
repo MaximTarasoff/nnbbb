@@ -17,7 +17,6 @@ import iteration1.ui.BaseUiTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -65,8 +64,6 @@ public class UpdateProfileTest extends BaseUiTest {
     @Test
     @UserSession
     @APIVersion("with_database_with_fix")
-    @Disabled
-    //todo не понимаю пока в чем ошибка, падает в пайпе, локально не повторяется, как подключу скриншоты - перепиши тест
     public void AuthUserCannotUpdateProfileWithSameNameTest() {
         new CrudRequester(
                 RequestSpecs.authAsUser(SessionStorage.getUser().getUsername(), SessionStorage.getUser().getPassword()),
@@ -80,9 +77,19 @@ public class UpdateProfileTest extends BaseUiTest {
                 .shouldBe(Condition.visible)
                 .shouldHave(Condition.text("Welcome, " + updateProfileRequest.get().getName() + "!"));
 
+        new UserDashboard()
+                .getProfileNameField()
+                .shouldHave(Condition.text(updateProfileRequest.get().getName()));
+
+        new UserDashboard()
+                .clickEditProfileButton()
+                .getNameInput()
+                .shouldBe(Condition.visible, Condition.clickable);
+
         new EditProfile()
-                .open()
-                .enterName(updateProfileRequest.get().getName())
+                .enterName(updateProfileRequest.get().getName());
+
+        new EditProfile()
                 .saveChanges()
                 .checkAlertMessageAndAccept(ProfileAlert.NAME_CANNOT_BE_SAME.getMessage())
                 .clickHomeButton()
@@ -110,7 +117,11 @@ public class UpdateProfileTest extends BaseUiTest {
     @UserSession
     @APIVersion("with_database_with_fix")
     public void AuthUserCannotUpdateProfileWithInvalidNameTest(String name, String errorValue) {
-        new EditProfile().enterName(name)
+        new EditProfile().getNameInput().shouldBe(Condition.visible, Condition.clickable)
+                .shouldHave(Condition.attribute("placeholder", "Enter new name"));
+
+        new EditProfile()
+                .enterName(name)
                 .saveChanges()
                 .checkAlertMessageAndAccept(errorValue)
                 .clickHomeButton()
