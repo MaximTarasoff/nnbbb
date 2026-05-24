@@ -1,0 +1,148 @@
+PS C:\Users\360m\Downloads\nbank-test\infra\kube>
+minikube start --driver=docker
+* minikube v1.38.1 on Microsoft Windows 11 Home Single Language 25H2
+* Using the docker driver based on existing profile
+* Starting "minikube" primary control-plane node in "minikube" cluster
+* Pulling base image v0.0.50 ...
+* Updating the running docker "minikube" container ...
+* Preparing Kubernetes v1.35.1 on Docker 29.2.1 ...
+* Verifying Kubernetes components...
+  - Using image gcr.io/k8s-minikube/storage-provisioner:v5
+* Enabled addons: storage-provisioner, default-storageclass
+
+! C:\Program Files\Docker\Docker\resources\bin\kubectl.exe is version 1.30.2, which may have incompatibilities with Kubernetes 1.35.1.
+  - Want kubectl v1.35.1? Try 'minikube kubectl -- get pods -A'
+* Done! kubectl is now configured to use "minikube" cluster and "default" namespace by default
+
+
+PS C:\Users\360m\Downloads\nbank-test\infra\kube>
+kubectl create configmap selenoid-config --from-file=browsers.json=./nbank-chart/files/browsers.json
+configmap/selenoid-config created
+
+PS C:\Users\360m\Downloads\nbank-test\infra\kube>
+helm install nbank ./nbank-chart
+NAME: nbank
+LAST DEPLOYED: Sun May 24 11:31:17 2026
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+DESCRIPTION: Install complete
+TEST SUITE: None
+
+PS C:\Users\360m\Downloads\nbank-test\infra\kube>
+kubectl get svc
+NAME          TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE
+backend       NodePort    10.101.185.121   <none>        4111:30837/TCP   29s
+frontend      NodePort    10.108.192.35    <none>        80:30830/TCP     29s
+kubernetes    ClusterIP   10.96.0.1        <none>        443/TCP          65m
+postgres      ClusterIP   10.99.9.30       <none>        5432/TCP         29s
+selenoid      NodePort    10.108.141.60    <none>        4444:32588/TCP   29s
+selenoid-ui   NodePort    10.96.55.194     <none>        8080:31055/TCP   29s
+
+PS C:\Users\360m\Downloads\nbank-test\infra\kube>
+kubectl get pods
+NAME                           READY   STATUS    RESTARTS   AGE
+backend-67858c9f87-kzxqh       1/1     Running   0          40s
+frontend-8475f7c85-hjl62       1/1     Running   0          40s
+postgres-598548fbc6-btt4c      1/1     Running   0          40s
+selenoid-74549bb9bf-jszsf      1/1     Running   0          40s
+selenoid-ui-744c5d768b-wwxs5   1/1     Running   0          40s
+
+
+PS C:\Users\360m\Downloads\nbank-test\infra\kube>
+kubectl logs deployment/backend
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.5)
+
+{"timestamp":"2026-05-24T08:31:25.163676548Z","logger_name":"me.nobugs.bank.BankApplication","thread_name":"main","level":"INFO","message":"Starting BankApplication v0.0.1-SNAPSHOT using Java 17.0.17 with PID 1 (/app/app.jar started by root in /app)"}
+{"timestamp":"2026-05-24T08:31:25.177265404Z","logger_name":"me.nobugs.bank.BankApplication","thread_name":"main","level":"INFO","message":"No active profile set, falling back to 1 default profile: \"default\""}
+{"timestamp":"2026-05-24T08:31:29.651604331Z","logger_name":"org.springframework.data.repository.config.RepositoryConfigurationDelegate","thread_name":"main","level":"INFO","message":"Bootstrapping Spring Data JPA repositories in DEFAULT mode."}
+{"timestamp":"2026-05-24T08:31:29.773964391Z","logger_name":"org.springframework.data.repository.config.RepositoryConfigurationDelegate","thread_name":"main","level":"INFO","message":"Finished Spring Data repository scanning in 112 ms. Found 3 JPA repository interfaces."}
+{"timestamp":"2026-05-24T08:31:33.443985221Z","logger_name":"org.springframework.boot.web.embedded.tomcat.TomcatWebServer","thread_name":"main","level":"INFO","message":"Tomcat initialized with port 4111 (http)"}
+{"timestamp":"2026-05-24T08:31:33.542885498Z","logger_name":"org.apache.catalina.core.StandardService","thread_name":"main","level":"INFO","message":"Starting service [Tomcat]"}
+{"timestamp":"2026-05-24T08:31:33.543426166Z","logger_name":"org.apache.catalina.core.StandardEngine","thread_name":"main","level":"INFO","message":"Starting Servlet engine: [Apache Tomcat/10.1.20]"}
+{"timestamp":"2026-05-24T08:31:33.755028066Z","logger_name":"org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/]","thread_name":"main","level":"INFO","message":"Initializing Spring embedded WebApplicationContext"}
+{"timestamp":"2026-05-24T08:31:33.756679909Z","logger_name":"org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext","thread_name":"main","level":"INFO","message":"Root WebApplicationContext: initialization completed in 8406 ms"}
+{"timestamp":"2026-05-24T08:31:35.841086029Z","logger_name":"com.zaxxer.hikari.HikariDataSource","thread_name":"main","level":"INFO","message":"HikariPool-1 - Starting..."}
+{"timestamp":"2026-05-24T08:31:37.051299948Z","logger_name":"com.zaxxer.hikari.pool.HikariPool","thread_name":"main","level":"INFO","message":"HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@79b8ecb"}
+{"timestamp":"2026-05-24T08:31:37.13695938Z","logger_name":"com.zaxxer.hikari.HikariDataSource","thread_name":"main","level":"INFO","message":"HikariPool-1 - Start completed."}
+{"timestamp":"2026-05-24T08:31:37.851799104Z","logger_name":"org.flywaydb.core.internal.license.VersionPrinter","thread_name":"main","level":"INFO","message":"Flyway Community Edition 9.22.3 by Redgate"}
+{"timestamp":"2026-05-24T08:31:37.852030819Z","logger_name":"org.flywaydb.core.internal.license.VersionPrinter","thread_name":"main","level":"INFO","message":"See release notes here: https://rd.gt/416ObMi"}
+{"timestamp":"2026-05-24T08:31:37.852083179Z","logger_name":"org.flywaydb.core.internal.license.VersionPrinter","thread_name":"main","level":"INFO","message":""}
+{"timestamp":"2026-05-24T08:31:38.038314275Z","logger_name":"org.flywaydb.core.FlywayExecutor","thread_name":"main","level":"INFO","message":"Database: jdbc:postgresql://postgres:5432/nbank (PostgreSQL 15.18)"}
+{"timestamp":"2026-05-24T08:31:38.234389171Z","logger_name":"org.flywaydb.core.internal.schemahistory.JdbcTableSchemaHistory","thread_name":"main","level":"INFO","message":"Schema history table \"public\".\"flyway_schema_history\" does not exist yet"}
+{"timestamp":"2026-05-24T08:31:38.23827784Z","logger_name":"org.flywaydb.core.internal.command.DbValidate","thread_name":"main","level":"INFO","message":"Successfully validated 3 migrations (execution time 00:00.093s)"}
+{"timestamp":"2026-05-24T08:31:38.253849282Z","logger_name":"org.flywaydb.core.internal.schemahistory.JdbcTableSchemaHistory","thread_name":"main","level":"INFO","message":"Creating Schema History table \"public\".\"flyway_schema_history\" with baseline ..."}
+{"timestamp":"2026-05-24T08:31:38.35425165Z","logger_name":"org.flywaydb.core.internal.command.DbBaseline","thread_name":"main","level":"INFO","message":"Successfully baselined schema with version: 1"}
+{"timestamp":"2026-05-24T08:31:38.367320598Z","logger_name":"org.flywaydb.core.internal.command.DbMigrate","thread_name":"main","level":"INFO","message":"Current version of schema \"public\": 1"}
+{"timestamp":"2026-05-24T08:31:38.435730319Z","logger_name":"org.flywaydb.core.internal.command.DbMigrate","thread_name":"main","level":"INFO","message":"Migrating schema \"public\" to version \"2 - Insert sample data\""}
+{"timestamp":"2026-05-24T08:31:38.45517472Z","logger_name":"org.flywaydb.core.internal.command.DbMigrate","thread_name":"main","level":"INFO","message":"Migrating schema \"public\" to version \"3 - Fix password hashes\""}
+{"timestamp":"2026-05-24T08:31:38.468740287Z","logger_name":"org.flywaydb.core.internal.command.DbMigrate","thread_name":"main","level":"INFO","message":"Successfully applied 2 migrations to schema \"public\", now at version v3 (execution time 00:00.015s)"}
+{"timestamp":"2026-05-24T08:31:38.942011864Z","logger_name":"org.hibernate.jpa.internal.util.LogHelper","thread_name":"main","level":"INFO","message":"HHH000204: Processing PersistenceUnitInfo [name: default]"}
+{"timestamp":"2026-05-24T08:31:39.534360347Z","logger_name":"org.hibernate.Version","thread_name":"main","level":"INFO","message":"HHH000412: Hibernate ORM core version 6.4.4.Final"}
+{"timestamp":"2026-05-24T08:31:39.656723825Z","logger_name":"org.hibernate.cache.internal.RegionFactoryInitiator","thread_name":"main","level":"INFO","message":"HHH000026: Second-level cache disabled"}
+{"timestamp":"2026-05-24T08:31:41.365239617Z","logger_name":"org.springframework.orm.jpa.persistenceunit.SpringPersistenceUnitInfo","thread_name":"main","level":"INFO","message":"No LoadTimeWeaver setup: ignoring JPA class transformer"}
+{"timestamp":"2026-05-24T08:31:41.565333215Z","logger_name":"org.hibernate.orm.deprecation","thread_name":"main","level":"WARN","message":"HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)"}
+{"timestamp":"2026-05-24T08:31:44.369590349Z","logger_name":"org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator","thread_name":"main","level":"INFO","message":"HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)"}
+{"timestamp":"2026-05-24T08:31:44.413402872Z","logger_name":"org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean","thread_name":"main","level":"INFO","message":"Initialized JPA EntityManagerFactory for persistence unit 'default'"}
+🧪 MeterRegistry class = io.micrometer.prometheus.PrometheusMeterRegistry
+{"timestamp":"2026-05-24T08:31:47.241634454Z","logger_name":"org.springframework.data.jpa.repository.query.QueryEnhancerFactory","thread_name":"main","level":"INFO","message":"Hibernate is in classpath; If applicable, HQL parser will be used."}
+{"timestamp":"2026-05-24T08:31:50.847846818Z","logger_name":"org.springframework.boot.autoconfigure.orm.jpa.JpaBaseConfiguration$JpaWebConfiguration","thread_name":"main","level":"WARN","message":"spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning"}
+{"timestamp":"2026-05-24T08:31:53.548453779Z","logger_name":"org.springframework.boot.actuate.endpoint.web.EndpointLinksResolver","thread_name":"main","level":"INFO","message":"Exposing 3 endpoint(s) beneath base path '/actuator'"}
+{"timestamp":"2026-05-24T08:31:53.856689326Z","logger_name":"org.springframework.security.web.DefaultSecurityFilterChain","thread_name":"main","level":"INFO","message":"Will secure any request with [org.springframewo
+rk.security.web.session.DisableEncodeUrlFilter@4473bbc1, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@433f8efa, org.springframework.security.web.context.SecurityContextHolde
+rFilter@5331be15, org.springframework.security.web.header.HeaderWriterFilter@4bd0d62f, org.springframework.web.filter.CorsFilter@bb4fc7d, org.springframework.security.web.authentication.logout.LogoutFilter@57fefa97,
+org.springframework.security.web.authentication.www.BasicAuthenticationFilter@5242e9f7, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@457512b, org.springframework.security.web.servletapi.Secur
+ityContextHolderAwareRequestFilter@531245fe, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@55eb9b2c, org.springframework.security.web.access.ExceptionTranslationFilter@4819a11f, org.springframework.security.web.access.intercept.AuthorizationFilter@31a65ddd]"}
+{"timestamp":"2026-05-24T08:31:55.541213864Z","logger_name":"org.springframework.boot.web.embedded.tomcat.TomcatWebServer","thread_name":"main","level":"INFO","message":"Tomcat started on port 4111 (http) with context path ''"}
+{"timestamp":"2026-05-24T08:31:55.559993553Z","logger_name":"me.nobugs.bank.BankApplication","thread_name":"main","level":"INFO","message":"Started BankApplication in 32.305 seconds (process running for 33.148)"}
+
+360m@SHADOW-1 MINGW64 ~/Downloads/nbank-test/infra/kube (kubernetes)
+$ kubectl port-forward svc/postgres 5433:5432 > /dev/null 2>&1 &
+[1] 139
+
+360m@SHADOW-1 MINGW64 ~/Downloads/nbank-test/infra/kube (kubernetes)
+$ kubectl port-forward svc/frontend 3000:80 > /dev/null 2>&1 &
+[2] 144
+
+360m@SHADOW-1 MINGW64 ~/Downloads/nbank-test/infra/kube (kubernetes)
+$ kubectl port-forward svc/backend 4111:4111 > /dev/null 2>&1 &
+[3] 149
+
+360m@SHADOW-1 MINGW64 ~/Downloads/nbank-test/infra/kube (kubernetes)
+$ kubectl port-forward svc/selenoid 4444:4444 > /dev/null 2>&1 &
+[4] 154
+
+360m@SHADOW-1 MINGW64 ~/Downloads/nbank-test/infra/kube (kubernetes)
+$ kubectl port-forward svc/selenoid-ui 8080:8080 > /dev/null 2>&1 &
+[5] 159
+
+360m@SHADOW-1 MINGW64 ~/Downloads/nbank-test/infra/kube (kubernetes)
+$ kubectl scale deployment/frontend --replicas=3
+deployment.apps/frontend scaled
+
+360m@SHADOW-1 MINGW64 ~/Downloads/nbank-test/infra/kube (kubernetes)
+$ kubectl scale deployment/selenoid-ui --replicas=3
+deployment.apps/selenoid-ui scaled
+
+360m@SHADOW-1 MINGW64 ~/Downloads/nbank-test/infra/kube (kubernetes)
+$ kubectl get pods
+NAME                           READY   STATUS    RESTARTS   AGE
+backend-67858c9f87-kzxqh       1/1     Running   0          3m30s
+frontend-8475f7c85-hjl62       1/1     Running   0          3m30s
+frontend-8475f7c85-p54kx       1/1     Running   0          28s
+frontend-8475f7c85-z2ldg       1/1     Running   0          28s
+postgres-598548fbc6-btt4c      1/1     Running   0          3m30s
+selenoid-74549bb9bf-jszsf      1/1     Running   0          3m30s
+selenoid-ui-744c5d768b-77d68   1/1     Running   0          22s
+selenoid-ui-744c5d768b-bxppr   1/1     Running   0          22s
+selenoid-ui-744c5d768b-wwxs5   1/1     Running   0          3m30s
+
+
+
