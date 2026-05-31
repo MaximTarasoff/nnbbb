@@ -9,7 +9,7 @@ import api.models.BaseModel;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class DepositMoneyRequest extends BaseModel {
+public class DepositMoneyRequestV2 extends BaseModel {
     private long id;
     @GeneratingRule(min = 0.01, max = 5000.0)
     private double balance;

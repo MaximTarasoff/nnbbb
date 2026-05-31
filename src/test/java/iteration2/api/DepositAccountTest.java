@@ -2,6 +2,7 @@ package iteration2.api;
 
 import api.dao.TransactionDao;
 import api.dao.comparison.DaoAndModelAssertions;
+import api.enums.bank.BankMessage;
 import api.generators.RandomModelGenerator;
 import api.models.accounts.CreateAccountResponse;
 import api.models.accounts.transactions.TransactionType;
@@ -11,8 +12,8 @@ import common.annotations.UserSession;
 import common.storage.SessionStorage;
 import iteration1.api.BaseTest;
 import api.models.accounts.transactions.Transaction;
-import api.models.accounts.deposit.DepositMoneyRequest;
-import api.models.accounts.deposit.DepositMoneyResponse;
+import api.models.accounts.deposit.DepositMoneyRequestV2;
+import api.models.accounts.deposit.DepositMoneyResponseV2;
 import api.models.accounts.transactions.ReadAccountTransactionsResponse;
 import api.models.comparison.ModelAssertions;
 import org.assertj.core.api.Assertions;
@@ -45,12 +46,12 @@ public class DepositAccountTest extends BaseTest {
     @UserSession(type = "API")
     @APIVersion("with_database_with_fix")
     public void userCanDepositMoneyToHisOwnAccountTest() {
-        DepositMoneyRequest depositMoneyRequest = RandomModelGenerator.generateAnnotatedFieldsOnly(DepositMoneyRequest.class);
+        DepositMoneyRequestV2 depositMoneyRequest = RandomModelGenerator.generateAnnotatedFieldsOnly(DepositMoneyRequestV2.class);
         depositMoneyRequest.setId(ownAccount.get().getId());
 
-        DepositMoneyResponse depositMoneyResponse = new ValidatedCrudRequester<DepositMoneyResponse>(
+        DepositMoneyResponseV2 depositMoneyResponse = new ValidatedCrudRequester<DepositMoneyResponseV2>(
                 RequestSpecs.authAsUser(SessionStorage.getUser().getUsername(), SessionStorage.getUser().getPassword()),
-                Endpoint.ACCOUNTS_DEPOSIT,
+                Endpoint.ACCOUNTS_DEPOSIT_V2,
                 ResponseSpecs.requestReturnsOK())
                 .post(depositMoneyRequest);
 
@@ -83,12 +84,12 @@ public class DepositAccountTest extends BaseTest {
     @UserSession(type = "API", value = 2)
     @APIVersion("with_database_with_fix")
     public void userCannotDepositMoneyToNotHisAccountTest() {
-        DepositMoneyRequest depositMoneyRequest = RandomModelGenerator.generateAnnotatedFieldsOnly(DepositMoneyRequest.class);
+        DepositMoneyRequestV2 depositMoneyRequest = RandomModelGenerator.generateAnnotatedFieldsOnly(DepositMoneyRequestV2.class);
         depositMoneyRequest.setId(ownAccount.get().getId());
 
         new CrudRequester(
                 RequestSpecs.authAsUser(SessionStorage.getUser(2).getUsername(), SessionStorage.getUser(2).getPassword()),
-                Endpoint.ACCOUNTS_DEPOSIT,
+                Endpoint.ACCOUNTS_DEPOSIT_V2,
                 ResponseSpecs.requestReturnsForbiddenRequest())
                 .post(depositMoneyRequest);
 
@@ -109,12 +110,12 @@ public class DepositAccountTest extends BaseTest {
     @Test
     @UserSession(type = "API")
     public void userCannotDepositMoneyToNotExistedAccountTest() {
-        DepositMoneyRequest depositMoneyRequest = RandomModelGenerator.generateAnnotatedFieldsOnly(DepositMoneyRequest.class);
+        DepositMoneyRequestV2 depositMoneyRequest = RandomModelGenerator.generateAnnotatedFieldsOnly(DepositMoneyRequestV2.class);
         depositMoneyRequest.setId(-1);
 
         new CrudRequester(
                 RequestSpecs.authAsUser(SessionStorage.getUser().getUsername(), SessionStorage.getUser().getPassword()),
-                Endpoint.ACCOUNTS_DEPOSIT,
+                Endpoint.ACCOUNTS_DEPOSIT_V2,
                 ResponseSpecs.requestReturnsForbiddenRequest())
                 .post(depositMoneyRequest);
     }
@@ -122,9 +123,9 @@ public class DepositAccountTest extends BaseTest {
 
     public static Stream<Arguments> depositInvalidDataV1() {
         return Stream.of(
-                Arguments.of(0.009, "Deposit amount must be at least 0.01"),
-                Arguments.of(-5000, "Deposit amount must be at least 0.01"),
-                Arguments.of(5000.001, "Deposit amount cannot exceed 5000")
+                Arguments.of(0.009, BankMessage.DEPOSIT_AMOUNT_MUST_BE_MORE_ZERO_POINT_ZERO_ONE.getMessage()),
+                Arguments.of(-5000, BankMessage.DEPOSIT_AMOUNT_MUST_BE_MORE_ZERO_POINT_ZERO_ONE.getMessage()),
+                Arguments.of(5000.001, BankMessage.DEPOSIT_AMOUNT_CANNOT_EXCEED_FIVE_THOUSAND.getMessage())
         );
     }
 
@@ -133,14 +134,14 @@ public class DepositAccountTest extends BaseTest {
     @UserSession(type = "API")
     @APIVersion("with_validation_fix")
     public void userCanDepositInvalidMoneyToHisOwnAccountTest(double balance, String errorValue) {
-        DepositMoneyRequest depositMoneyRequest = DepositMoneyRequest.builder()
+        DepositMoneyRequestV2 depositMoneyRequest = DepositMoneyRequestV2.builder()
                 .id(ownAccount.get().getId())
                 .balance(balance)
                 .build();
 
         new CrudRequester(
                 RequestSpecs.authAsUser(SessionStorage.getUser().getUsername(), SessionStorage.getUser().getPassword()),
-                Endpoint.ACCOUNTS_DEPOSIT,
+                Endpoint.ACCOUNTS_DEPOSIT_V2,
                 ResponseSpecs.requestReturnsBadRequest(errorValue))
                 .post(depositMoneyRequest);
 
@@ -161,9 +162,9 @@ public class DepositAccountTest extends BaseTest {
 
     public static Stream<Arguments> depositInvalidDataV2() {
         return Stream.of(
-                Arguments.of(0.009, "Deposit amount must be at least 0.01"),
-                Arguments.of(-5000, "Invalid account or amount"),
-                Arguments.of(5000.001, "Deposit amount exceeds the 5000 limit")
+                Arguments.of(0.009, BankMessage.DEPOSIT_AMOUNT_MUST_BE_MORE_ZERO_POINT_ZERO_ONE.getMessage()),
+                Arguments.of(-5000, BankMessage.INVALID_ACCOUNT_OR_AMOUNT.getMessage()),
+                Arguments.of(5000.001, BankMessage.DEPOSIT_AMOUNT_EXCEEDS_THE_FIVE_THOUSAND_LIMIT.getMessage())
         );
     }
 
@@ -172,14 +173,14 @@ public class DepositAccountTest extends BaseTest {
     @UserSession(type = "API")
     @APIVersion("with_database_with_fix")
     public void userCanDepositInvalidMoneyToHisOwnAccountTestV2(double balance, String errorValue) {
-        DepositMoneyRequest depositMoneyRequest = DepositMoneyRequest.builder()
+        DepositMoneyRequestV2 depositMoneyRequest = DepositMoneyRequestV2.builder()
                 .id(ownAccount.get().getId())
                 .balance(balance)
                 .build();
 
         new CrudRequester(
                 RequestSpecs.authAsUser(SessionStorage.getUser().getUsername(), SessionStorage.getUser().getPassword()),
-                Endpoint.ACCOUNTS_DEPOSIT,
+                Endpoint.ACCOUNTS_DEPOSIT_V2,
                 ResponseSpecs.requestReturnsBadRequest(errorValue))
                 .post(depositMoneyRequest);
 

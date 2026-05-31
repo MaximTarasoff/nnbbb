@@ -9,7 +9,7 @@ import com.codeborne.selenide.Condition;
 import common.annotations.APIVersion;
 import common.annotations.UserSession;
 import common.storage.SessionStorage;
-import api.models.accounts.deposit.DepositMoneyResponse;
+import api.models.accounts.deposit.DepositMoneyResponseV2;
 import iteration1.ui.BaseUiTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -33,7 +33,7 @@ public class TransferAccountTest extends BaseUiTest {
     public void AuthUserCanTransferMoneyBetweenHisOwnAccountsTest() {
         CreateAccountResponse ownAccountOne = SessionStorage.getUserSteps().createAccount();
         CreateAccountResponse ownAccountTwo = SessionStorage.getUserSteps().createAccount();
-        DepositMoneyResponse depositMoneyResponse = SessionStorage.getUserSteps().depositAccountById(ownAccountOne.getId());
+        DepositMoneyResponseV2 depositMoneyResponse = SessionStorage.getUserSteps().depositRandomBalanceToAccount(ownAccountOne.getId());
 
         new TransferPage()
                 .open()
@@ -87,7 +87,7 @@ public class TransferAccountTest extends BaseUiTest {
         CreateAccountResponse ownAccount = SessionStorage.getUserSteps(1).createAccount();
         CreateAccountResponse otherAccount = SessionStorage.getUserSteps(2).createAccount();
 
-        DepositMoneyResponse depositMoneyResponse = SessionStorage.getUserSteps().depositAccountById(ownAccount.getId());
+        DepositMoneyResponseV2 depositMoneyResponse = SessionStorage.getUserSteps().depositRandomBalanceToAccount(ownAccount.getId());
 
         new TransferPage()
                 .open()
@@ -140,7 +140,7 @@ public class TransferAccountTest extends BaseUiTest {
     public void AuthUserCannotTransferMoneyMoreThenExistTest() {
         CreateAccountResponse ownAccountOne = SessionStorage.getUserSteps().createAccount();
         CreateAccountResponse ownAccountTwo = SessionStorage.getUserSteps().createAccount();
-        DepositMoneyResponse depositMoneyResponse = SessionStorage.getUserSteps().depositAccountById(ownAccountOne.getId());
+        DepositMoneyResponseV2 depositMoneyResponse = SessionStorage.getUserSteps().depositRandomBalanceToAccount(ownAccountOne.getId());
 
         new TransferPage()
                 .open()

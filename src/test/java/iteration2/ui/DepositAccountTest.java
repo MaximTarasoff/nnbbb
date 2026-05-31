@@ -3,7 +3,7 @@ package iteration2.ui;
 import api.dao.TransactionDao;
 import api.generators.RandomModelGenerator;
 import api.models.accounts.CreateAccountResponse;
-import api.models.accounts.deposit.DepositMoneyRequest;
+import api.models.accounts.deposit.DepositMoneyRequestV2;
 import api.models.accounts.transactions.Transaction;
 import api.models.accounts.transactions.TransactionType;
 import api.requests.steps.DataBaseSteps;
@@ -34,7 +34,7 @@ public class DepositAccountTest extends BaseUiTest {
 
     @BeforeEach
     public void setUp() {
-        randomAmount = RandomModelGenerator.generate(DepositMoneyRequest.class).getBalance();
+        randomAmount = RandomModelGenerator.generate(DepositMoneyRequestV2.class).getBalance();
         ownAccount.set(SessionStorage.getUserSteps().createAccount());
 
         new DepositMoney()

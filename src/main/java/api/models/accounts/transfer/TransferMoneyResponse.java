@@ -9,8 +9,14 @@ import api.models.BaseModel;
 @NoArgsConstructor
 @Builder
 public class TransferMoneyResponse extends BaseModel {
-    private long senderAccountId;
-    private long receiverAccountId;
-    private double amount;
+    private String status;
     private String message;
+    private Long transactionId;
+    private Long senderAccountId;
+    private Long receiverAccountId;
+    private double amount;
+    private double fraudRiskScore;
+    private String fraudReason;
+    private boolean requiresVerification;
+    private boolean requiresManualReview;
 }

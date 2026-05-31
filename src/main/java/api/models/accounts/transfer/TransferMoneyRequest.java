@@ -14,4 +14,5 @@ public class TransferMoneyRequest extends BaseModel {
     private long receiverAccountId;
     @GeneratingRule(min = 0.01, max = 10000.0)
     private double amount;
+    private String description;
 }
