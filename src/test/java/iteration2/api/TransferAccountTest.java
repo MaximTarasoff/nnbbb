@@ -2,6 +2,7 @@ package iteration2.api;
 
 import api.dao.TransactionDao;
 import api.dao.comparison.DaoAndModelAssertions;
+import api.enums.bank.BankMessage;
 import api.models.accounts.CreateAccountResponse;
 import api.models.accounts.transactions.TransactionType;
 import api.requests.steps.DataBaseSteps;
@@ -10,7 +11,7 @@ import common.annotations.UserSession;
 import common.storage.SessionStorage;
 import iteration1.api.BaseTest;
 import api.models.accounts.transactions.Transaction;
-import api.models.accounts.deposit.DepositMoneyResponse;
+import api.models.accounts.deposit.DepositMoneyResponseV2;
 import api.models.accounts.transactions.ReadAccountTransactionsResponse;
 import api.models.accounts.transfer.TransferMoneyRequest;
 import api.models.accounts.transfer.TransferMoneyResponse;
@@ -47,7 +48,7 @@ public class TransferAccountTest extends BaseTest {
     @UserSession(type = "API")
     @APIVersion("with_database_with_fix")
     public void AuthUserCanTransferMoneyBetweenHisOwnAccountsTest() {
-        DepositMoneyResponse depositMoneyResponse = SessionStorage.getUserSteps().depositAccountById(
+        DepositMoneyResponseV2 depositMoneyResponse = SessionStorage.getUserSteps().depositRandomBalanceToAccount(
                 ownAccountOne.get().getId()
         );
 
@@ -102,7 +103,6 @@ public class TransferAccountTest extends BaseTest {
         TransactionDao transactionDaoTwo = DataBaseSteps.getTransactionByTransaction(expectedTransactionTwo);
         softly.assertThat(transactionDaoTwo.getRelatedAccountId()).isEqualTo(expectedTransactionTwo.getRelatedAccountId());
         softly.assertThat(transactionDaoTwo.getAmount()).isEqualTo(expectedTransactionTwo.getAmount());
-
     }
 
     @Test
@@ -111,7 +111,7 @@ public class TransferAccountTest extends BaseTest {
     public void AuthUserCanTransferMoneyToNotHisAccountTest() {
         otherAccountOne.set(SessionStorage.getUserSteps(2).createAccount());
 
-        DepositMoneyResponse depositMoneyResponse = SessionStorage.getUserSteps().depositAccountById(
+        DepositMoneyResponseV2 depositMoneyResponse = SessionStorage.getUserSteps().depositRandomBalanceToAccount(
                 ownAccountOne.get().getId()
         );
 
@@ -158,7 +158,7 @@ public class TransferAccountTest extends BaseTest {
     @UserSession(type = "API")
     @APIVersion("with_database_with_fix")
     public void AuthUserCannotTransferMoneyMoreThenExistTest() {
-        DepositMoneyResponse depositMoneyResponse = SessionStorage.getUserSteps().depositAccountById(
+        DepositMoneyResponseV2 depositMoneyResponse = SessionStorage.getUserSteps().depositRandomBalanceToAccount(
                 ownAccountOne.get().getId()
         );
 
@@ -172,7 +172,7 @@ public class TransferAccountTest extends BaseTest {
         new CrudRequester(
                 RequestSpecs.authAsUser(SessionStorage.getUser().getUsername(), SessionStorage.getUser().getPassword()),
                 Endpoint.ACCOUNTS_TRANSFER,
-                ResponseSpecs.requestReturnsBadRequest("Invalid transfer: insufficient funds or invalid accounts"))
+                ResponseSpecs.requestReturnsBadRequest(BankMessage.INVALID_TRANSFER_INSUFFICIENT_FUNDS_OR_INVALID_ACCOUNTS.getMessage()))
                 .post(transferMoneyRequest);
 
         Transaction expectedTransaction = Transaction.builder()
@@ -193,9 +193,9 @@ public class TransferAccountTest extends BaseTest {
 
         public static Stream<Arguments> transferInvalidDataV1() {
         return Stream.of(
-                Arguments.of(0.009, "Transfer amount must be at least 0.01"),
-                Arguments.of(-10000, "Transfer amount must be at least 0.01"),
-                Arguments.of(10000.01, "Transfer amount cannot exceed 10000")
+                Arguments.of(0.009, BankMessage.TRANSFER_AMOUNT_MUST_BE_AT_LEAST_ZERO_POINT_ZERO_ONE.getMessage()),
+                Arguments.of(-10000, BankMessage.TRANSFER_AMOUNT_MUST_BE_AT_LEAST_ZERO_POINT_ZERO_ONE.getMessage()),
+                Arguments.of(10000.01, BankMessage.TRANSFER_AMOUNT_CANNOT_EXCEED_TEN_THOUSAND.getMessage())
         );
     }
 
@@ -235,9 +235,9 @@ public class TransferAccountTest extends BaseTest {
 
     public static Stream<Arguments> transferInvalidDataV2() {
         return Stream.of(
-                Arguments.of(0.009, "Invalid transfer: insufficient funds or invalid accounts"),
-                Arguments.of(-10000, "Invalid transfer: insufficient funds or invalid accounts"),
-                Arguments.of(10000.01, "Transfer amount cannot exceed 10000")
+                Arguments.of(0.009, BankMessage.INVALID_TRANSFER_INSUFFICIENT_FUNDS_OR_INVALID_ACCOUNTS.getMessage()),
+                Arguments.of(-10000, BankMessage.INVALID_TRANSFER_INSUFFICIENT_FUNDS_OR_INVALID_ACCOUNTS.getMessage()),
+                Arguments.of(10000.01, BankMessage.TRANSFER_AMOUNT_CANNOT_EXCEED_TEN_THOUSAND.getMessage())
         );
     }
 
